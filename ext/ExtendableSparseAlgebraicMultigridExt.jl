@@ -1,6 +1,20 @@
 module ExtendableSparseAlgebraicMultigridExt
 using ExtendableSparse
-using AlgebraicMultigrid
+using AlgebraicMultigrid: AlgebraicMultigrid, ruge_stuben, smoothed_aggregation, aspreconditioner
+using SparseArrays: SparseMatrixCSC, AbstractSparseMatrixCSC
+using LinearAlgebra: I
+
+
+import ExtendableSparse: SmoothedAggregationAMGBuilder
+import ExtendableSparse: RugeStubenAMGBuilder
+
+(b::SmoothedAggregationAMGBuilder)(A::AbstractSparseMatrixCSC,p)= (aspreconditioner(smoothed_aggregation(SparseMatrixCSC(A), Val{b.blocksize}; b.kwargs...)),I)
+(b::RugeStubenAMGBuilder)(A::AbstractSparseMatrixCSC,p)= (aspreconditioner(ruge_stuben(SparseMatrixCSC(A), Val{b.blocksize}; b.kwargs...)),I)
+
+
+####
+# Deprecated from here on
+# TODO remove in v2.0
 
 import ExtendableSparse: @makefrommatrix, AbstractPreconditioner, update!
 

@@ -30,7 +30,7 @@ function BlockPreconditioner end
 
 Factorizations on matrix partitions within a block preconditioner may or may not work with array views.
 E.g. the umfpack factorization cannot work with views, while ILUZeroPreconditioner can.
-Implementing a method for `allow_views` returning `false` resp. `true` allows to dispatch to the proper case.
+ Implementing a method for `allow_views` returning `false` resp. `true` allows to dispatch to the proper case.
 """
 allow_views(::Any)=false
 
@@ -98,3 +98,22 @@ function LinearAlgebra.ldiv!(u,p::BlockPreconditioner,v)
 end
 
 Base.eltype(p::BlockPreconditioner)=eltype(p.facts[1])
+
+
+
+Base.@kwdef struct EquationBlockPreconBuilder
+    precs=UMFPACKPrecs()
+    partitioning= [A -> 1:size(A,1)]
+end
+
+function (blockprecs::EquationBlockPreconBuilder)(A,p)
+    (;precs, partitioning)=blockprecs
+    factorization= A->precs(A,p)[1]
+    bp=BlockPreconditioner(A;partitioning=partitioning(A), factorization)
+    (bp,I)
+end
+
+"""
+    Allow array for precs => different precoms
+EquationBlockPreconBuilder
+"""

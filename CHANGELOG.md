@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0] - Planned
+
+### Breaking
+- remove solver + precon API which is not based on precs or directly overloading `\`.
+  Fully rely on LinearSolve (besides `\`)
+- Move AMGBuilder, ILUZeroBuilder to the correspondig packages (depending on the PRs)
+- remove "old" SparseMatrixLNK (need to benchmark before)
+
+## [1.6.0] - WIP
+- Support precs API of LinearSolve.jl
+
 ## [1.5.3] - 2024-10-07
 - Moved repo to WIAS-PDELib organization
 

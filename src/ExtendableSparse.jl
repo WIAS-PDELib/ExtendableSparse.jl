@@ -21,6 +21,7 @@ if USE_GPL_LIBS
 end
 
 
+include("compat.jl") # @public
 
 include("matrix/sparsematrixcsc.jl")
 include("matrix/abstractsparsematrixextension.jl")
@@ -52,13 +53,21 @@ include("factorizations/factorizations.jl")
 include("factorizations/simple_iteration.jl")
 export simple, simple!
 
+include("preconbuilders.jl")
+export SparspakPreconBuilder, UMFPACKPreconBuilder, EquationBlockPreconBuilder, JacobiPreconBuilder
+
+@public ILUZeroBuilder, SmoothedAggregationAMGBuilder, RugeStubenAMGBuilder
+
+
 include("matrix/sprand.jl")
 export sprand!, sprand_sdd!, fdrand, fdrand!, fdrand_coo, solverbenchmark
 
 export rawupdateindex!, updateindex!
 
 
-
+#####
+# All of the following is deprecated in favor of the precs bases
+# API
 
 export JacobiPreconditioner,
     ILU0Preconditioner,
@@ -207,5 +216,6 @@ Pardiso.set_iparm!(plu.ps,5,13.0)
 """
 function MKLPardisoLU end
 export MKLPardisoLU
+
 
 end # module
