@@ -12,11 +12,11 @@ repos:
   - id: no-commit-to-branch
     args: [--branch,master]
 - repo: https://github.com/gitleaks/gitleaks
-  rev: v8.16.3
+  rev: v8.23.2
   hooks:
   - id: gitleaks
 - repo: https://github.com/codespell-project/codespell
-  rev: v2.2.4
+  rev: v2.4.0
   hooks:
   - id: codespell
 - repo: https://github.com/fredrikekre/runic-pre-commit
