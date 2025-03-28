@@ -1,7 +1,7 @@
 name = "ExtendableSparse"
 uuid = "95c220a8-a1cf-11e9-0c77-dbfce5f500b3"
-authors = ["Juergen Fuhrmann <juergen.fuhrmann@wias-berlin.de>"]
-version = "1.7.0"
+authors = ["Juergen Fuhrmann <juergen.fuhrmann@wias-berlin.de>", "Daniel Runge"]
+version = "1.7.1"
 
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
@@ -56,7 +56,7 @@ ExtendableGrids = "1.9"
 ILUZero = "0.2"
 IncompleteLU = "^0.2.1"
 IterativeSolvers = "0.9"
-LinearSolve = "2.36.0, 3"
+LinearSolve = "2.36.0, 3.7.1"
 Pardiso = "0.5.1, 1"
 Sparspak = "0.3.6"
 StaticArrays = "1.5.24"
