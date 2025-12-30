@@ -17,13 +17,13 @@ const USE_GPL_LIBS = Base.USE_GPL_LIBS
 
 include("compat.jl") # @public
 
-include("matrix/sparsematrixcsc.jl")
-include("matrix/abstractsparsematrixextension.jl")
-include("matrix/sparsematrixlnk.jl")
-include("matrix/sparsematrixdilnkc.jl")
-include("matrix/abstractextendablesparsematrixcsc.jl")
-include("matrix/genericmtextendablesparsematrixcsc.jl")
-include("matrix/genericextendablesparsematrixcsc.jl")
+include("sparsematrixcsc.jl")
+include("abstractsparsematrixextension.jl")
+include("sparsematrixlnk.jl")
+include("sparsematrixdilnkc.jl")
+include("abstractextendablesparsematrixcsc.jl")
+include("genericmtextendablesparsematrixcsc.jl")
+include("genericextendablesparsematrixcsc.jl")
 
 
 """
