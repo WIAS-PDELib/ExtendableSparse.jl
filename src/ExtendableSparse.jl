@@ -108,7 +108,7 @@ export eliminate_dirichlet, eliminate_dirichlet!, mark_dirichlet
 include("preconbuilders.jl")
 export LinearSolvePreconBuilder, BlockPreconBuilder, JacobiPreconBuilder
 
-@public ILUZeroPreconBuilder, ILUTPreconBuilder, SmoothedAggregationPreconBuilder, RugeStubenPreconBuilder
+@public ILUZeroPreconBuilder, ILUTPreconBuilder
 
 
 include("sprand.jl")

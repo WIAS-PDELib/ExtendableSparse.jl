@@ -87,7 +87,7 @@ allprecs = [
     ExtendableSparse.ILUZeroPreconBuilder(),
     ExtendableSparse.ILUZeroPreconBuilder(; blocksize = 2),
     ExtendableSparse.ILUTPreconBuilder(),
-#    ExtendableSparse.JacobiPreconBuilder(),
+    #    ExtendableSparse.JacobiPreconBuilder(),
     SmoothedAggregationPreconBuilder(),
     RugeStubenPreconBuilder(),
 ]

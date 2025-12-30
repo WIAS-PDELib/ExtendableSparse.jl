@@ -94,9 +94,7 @@ $(SIGNATURES)
 SparseArrays.findnz(ext::AbstractExtendableSparseMatrixCSC) = findnz(sparse(ext))
 
 
-@static if VERSION >= v"1.7"
-    SparseArrays._checkbuffers(ext::AbstractExtendableSparseMatrixCSC) = SparseArrays._checkbuffers(sparse(ext))
-end
+SparseArrays._checkbuffers(ext::AbstractExtendableSparseMatrixCSC) = SparseArrays._checkbuffers(sparse(ext))
 
 """
     A\b

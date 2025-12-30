@@ -242,7 +242,7 @@ function fdrand(
     else
         if matrixtype == ExtendableSparseMatrix
             A = ExtendableSparseMatrix(T, N, N)
-        elseif matrixtype ==  STExtendableSparseMatrixCSC
+        elseif matrixtype == STExtendableSparseMatrixCSC
             A = STExtendableSparseMatrixCSC(T, N, N)
         elseif matrixtype == SparseMatrixDILNKC
             A = SparseMatrixDILNKC(T, N, N)
