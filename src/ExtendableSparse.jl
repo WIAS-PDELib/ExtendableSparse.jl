@@ -6,6 +6,7 @@ using LinearAlgebra: LinearAlgebra, Diagonal, Hermitian, Symmetric, Tridiagonal,
 using SparseArrays: SparseArrays, AbstractSparseMatrix, SparseMatrixCSC,
     dropzeros!, findnz, nzrange, sparse, spzeros
 using Sparspak: sparspaklu
+using SciMLPublic: @public
 using StaticArrays: StaticArrays, SMatrix, SVector
 import SparseArrays: AbstractSparseMatrixCSC, rowvals, getcolptr, nonzeros
 
@@ -14,8 +15,6 @@ import SparseArrays: AbstractSparseMatrixCSC, rowvals, getcolptr, nonzeros
 # test things at least a little bit..
 const USE_GPL_LIBS = Base.USE_GPL_LIBS
 
-
-include("compat.jl") # @public
 
 include("sparsematrixcsc.jl")
 include("abstractsparsematrixextension.jl")
