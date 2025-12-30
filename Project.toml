@@ -1,6 +1,6 @@
 name = "ExtendableSparse"
 uuid = "95c220a8-a1cf-11e9-0c77-dbfce5f500b3"
-version = "1.7.1"
+version = "2.0.0"
 authors = ["Juergen Fuhrmann <juergen.fuhrmann@wias-berlin.de>", "Daniel Runge"]
 
 [deps]

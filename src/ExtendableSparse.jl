@@ -111,7 +111,7 @@ export LinearSolvePreconBuilder, BlockPreconBuilder, JacobiPreconBuilder
 @public ILUZeroPreconBuilder, ILUTPreconBuilder, SmoothedAggregationPreconBuilder, RugeStubenPreconBuilder
 
 
-include("matrix/sprand.jl")
+include("sprand.jl")
 export sprand!, sprand_sdd!, fdrand, fdrand!, fdrand_coo, solverbenchmark
 
 export rawupdateindex!, updateindex!
