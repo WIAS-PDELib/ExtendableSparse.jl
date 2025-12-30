@@ -77,6 +77,7 @@ function fdrand!(
     _nonzeros(m::Matrix) = vec(m)
     _nonzeros(m::ExtendableSparseMatrix) = nonzeros(m)
     _nonzeros(m::SparseMatrixLNK) = m.nzval
+    _nonzeros(m::SparseMatrixDILNKC) = m.nzval
     _nonzeros(m::SparseMatrixCSC) = nonzeros(m)
 
     zero!(A::AbstractMatrix{T}) where {T} = A .= zero(T)
@@ -241,6 +242,10 @@ function fdrand(
     else
         if matrixtype == ExtendableSparseMatrix
             A = ExtendableSparseMatrix(T, N, N)
+        elseif matrixtype ==  STExtendableSparseMatrixCSC
+            A = STExtendableSparseMatrixCSC(T, N, N)
+        elseif matrixtype == SparseMatrixDILNKC
+            A = SparseMatrixDILNKC(T, N, N)
         elseif matrixtype == SparseMatrixLNK
             A = SparseMatrixLNK(T, N, N)
         elseif matrixtype == SparseMatrixCSC

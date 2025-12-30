@@ -18,6 +18,21 @@ function GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}(m::Integer, n::Integer) wh
     )
 end
 
+function GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}(A::SparseMatrixCSC{Tv, Ti}) where {Tm <: AbstractSparseMatrixExtension, Tv, Ti <: Integer}
+    return GenericExtendableSparseMatrixCSC(
+        SparseMatrixCSC(A),
+        Tm(size(A)...)
+    )
+end
+
+function Base.similar(m::GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}) where {Tm, Tv, Ti}
+    return ExtendableSparseMatrixCSC{Tv, Ti}(size(m)...)
+end
+
+function Base.similar(m::GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}, ::Type{T}) where {Tm, Tv, Ti, T}
+    return ExtendableSparseMatrixCSC{T, Ti}(size(m)...)
+end
+
 
 nnznew(ext::GenericExtendableSparseMatrixCSC) = nnz(ext.xmatrix)
 
@@ -75,7 +90,8 @@ function rawupdateindex!(
         op,
         v,
         i,
-        j
+        j,
+        part = 1
     )
     k = findindex(ext.cscmatrix, i, j)
     return if k > 0

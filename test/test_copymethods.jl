@@ -30,7 +30,7 @@ function test(T)
     end
     return true
 end
-test(Float64)
-test(Float64x2)
-test(Dual64)
+@test test(Float64)
+@test test(Float64x2)
+@test test(Dual64)
 end

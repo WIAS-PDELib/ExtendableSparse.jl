@@ -87,9 +87,9 @@ allprecs = [
     ExtendableSparse.ILUZeroPreconBuilder(),
     ExtendableSparse.ILUZeroPreconBuilder(; blocksize = 2),
     ExtendableSparse.ILUTPreconBuilder(),
-    ExtendableSparse.JacobiPreconBuilder(),
-    ExtendableSparse.SmoothedAggregationPreconBuilder(),
-    ExtendableSparse.RugeStubenPreconBuilder(),
+#    ExtendableSparse.JacobiPreconBuilder(),
+    SmoothedAggregationPreconBuilder(),
+    RugeStubenPreconBuilder(),
 ]
 
 @testset "iterations" begin

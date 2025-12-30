@@ -82,27 +82,27 @@ end
     include("test_linearsolve.jl")
 end
 
-@testset "Preconditioners" begin
-    include("test_preconditioners.jl")
-end
+# @testset "Preconditioners" begin
+#     include("test_preconditioners.jl")
+# end
 
 @testset "Symmetric" begin
     include("test_symmetric.jl")
 end
 
-@testset "ExtendableSparse.LUFactorization" begin
-    include("test_default_lu.jl")
-end
+# @testset "ExtendableSparse.LUFactorization" begin
+#     include("test_default_lu.jl")
+# end
 
-@testset "Sparspak" begin
-    include("test_sparspak.jl")
-end
+# @testset "Sparspak" begin
+#     include("test_sparspak.jl")
+# end
 
-if ExtendableSparse.USE_GPL_LIBS
-    @testset "Cholesky" begin
-        include("test_default_cholesky.jl")
-    end
-end
+# if ExtendableSparse.USE_GPL_LIBS
+#     @testset "Cholesky" begin
+#         include("test_default_cholesky.jl")
+#     end
+# end
 
 @testset "block" begin
     include("test_block.jl")

@@ -109,7 +109,7 @@ function LinearAlgebra.:\(
         ext::AbstractExtendableSparseMatrixCSC{Tv, Ti},
         b::AbstractVector
     ) where {Tv, Ti}
-    return SparspakLU(sparse(ext)) \ b
+    return sparspaklu(sparse(ext)) \ b
 end
 
 
