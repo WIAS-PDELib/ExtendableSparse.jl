@@ -2,11 +2,13 @@
 
 ## [2.0.0] - Planned
 
-### Breaking
-- remove solver + precon API which is not based on precs or directly overloading `\`.
+- Remove solver + precon API which is not based on precs or directly overloading `\`.
   Fully rely on LinearSolve (besides `\`)
-- Move AMGBuilder, ILUZeroBuilder etc. to the corresponding packages (depending on the PRs)
-- remove "old" SparseMatrixLNK (need to benchmark before)
+- Move AMGBuilder etc corresponding packages (depending on the PRs)
+- Keep ILUZeroPreconBuilder, JacobiPreconBuilder
+- ExtendableSparseMatrix is now GenericExtendableSparseMatrix{SparseMatrixLNK}
+- Changes should be non-breaking if only ExtendableSparseMatrix was used, and no solvers or preconditioners
+  For those, see LinearSolve.jl.
 
 ## [1.7.0] - 2025-02-06
 - Bump Pardiso to 1.0 and LinearSolve to 3.0
