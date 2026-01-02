@@ -67,7 +67,7 @@ mutable struct SparseMatrixLNK{Tv, Ti <: Integer} <: AbstractSparseMatrixExtensi
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
     
 Constructor of empty matrix.
 """
@@ -76,7 +76,7 @@ function SparseMatrixLNK{Tv, Ti}(m, n) where {Tv, Ti <: Integer}
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
     
 Constructor of empty matrix.
 """
@@ -88,21 +88,21 @@ function SparseMatrixLNK(
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
     
 Constructor of empty matrix.
 """
 SparseMatrixLNK(valuetype::Type{Tv}, m, n) where {Tv} = SparseMatrixLNK(Tv, Int, m, n)
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
     
 Constructor of empty matrix.
 """
 SparseMatrixLNK(m, n) = SparseMatrixLNK(Float64, m, n)
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
     
 Constructor from SparseMatrixCSC.
 
@@ -138,7 +138,7 @@ function findindex(lnk::SparseMatrixLNK{Tv, Ti}, i, j) where {Tv, Ti}
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
     
 Return value stored for entry or zero if not found
 """
@@ -174,7 +174,7 @@ function addentry!(lnk::SparseMatrixLNK, i, j, k, k0)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
     
 Update value of existing entry, otherwise extend matrix if v is nonzero.
 """
@@ -204,7 +204,7 @@ function Base.setindex!(lnk::SparseMatrixLNK, v, i, j)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Update element of the matrix  with operation `op`. 
 It assumes that `op(0,0)==0`. If `v` is zero, no new 
@@ -231,7 +231,7 @@ function updateindex!(lnk::SparseMatrixLNK{Tv, Ti}, op, v, i, j) where {Tv, Ti}
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Update element of the matrix  with operation `op`. 
 It assumes that `op(0,0)==0`. If `v` is zero a new entry
@@ -256,21 +256,21 @@ function rawupdateindex!(lnk::SparseMatrixLNK{Tv, Ti}, op, v, i, j) where {Tv, T
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Return tuple containing size of the matrix.
 """
 Base.size(lnk::SparseMatrixLNK) = (lnk.m, lnk.n)
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Return number of nonzero entries.
 """
 SparseArrays.nnz(lnk::SparseMatrixLNK) = lnk.nnz
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Dummy flush! method for SparseMatrixLNK. Just
 used in test methods
@@ -290,7 +290,7 @@ end
 Base.isless(x::ColEntry, y::ColEntry) = (x.rowval < y.rowval)
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Add SparseMatrixCSC matrix and [`SparseMatrixLNK`](@ref)  lnk, returning a SparseMatrixCSC
 """
@@ -392,7 +392,7 @@ end
 Base.:+(csc::SparseMatrixCSC, lnk::SparseMatrixLNK) = lnk + csc
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
     
 Constructor from SparseMatrixLNK.
 
@@ -402,18 +402,14 @@ function SparseArrays.SparseMatrixCSC(lnk::SparseMatrixLNK)::SparseMatrixCSC
     return lnk + csc
 end
 
-rowvals(S::SparseMatrixLNK) = getfield(S, :rowval)
-getcolptr(S::SparseMatrixLNK) = getfield(S, :colptr)
-nonzeros(S::SparseMatrixLNK) = getfield(S, :nzval)
-
 function Base.copy(S::SparseMatrixLNK)
     return SparseMatrixLNK(
         size(S, 1),
         size(S, 2),
         S.nnz,
         S.nentries,
-        copy(getcolptr(S)),
-        copy(rowvals(S)),
-        copy(nonzeros(S))
+        S.colptr,
+        S.rowval,
+        S.nzval
     )
 end

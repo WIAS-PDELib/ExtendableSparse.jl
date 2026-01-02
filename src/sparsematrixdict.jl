@@ -10,27 +10,49 @@ mutable struct SparseMatrixDict{Tv, Ti} <: AbstractSparseMatrixExtension{Tv, Ti}
     SparseMatrixDict{Tv, Ti}(m, n) where {Tv, Ti} = new(m, n, Dict{Pair{Ti, Ti}, Tv}())
 end
 
+
+"""
+    $(TYPEDSIGNATURES)
+"""
 function reset!(m::SparseMatrixDict{Tv, Ti}) where {Tv, Ti}
     return m.values = Dict{Pair{Ti, Ti}, Tv}()
 end
 
+"""
+    $(TYPEDSIGNATURES)
+"""
 function Base.setindex!(m::SparseMatrixDict, v, i, j)
     return m.values[Pair(i, j)] = v
 end
 
+"""
+    $(TYPEDSIGNATURES)
+"""
 function rawupdateindex!(m::SparseMatrixDict{Tv, Ti}, op, v, i, j) where {Tv, Ti}
     p = Pair(i, j)
     return m.values[p] = op(get(m.values, p, zero(Tv)), v)
 end
 
+"""
+    $(TYPEDSIGNATURES)
+"""
 function Base.getindex(m::SparseMatrixDict{Tv}, i, j) where {Tv}
     return get(m.values, Pair(i, j), zero(Tv))
 end
 
+"""
+    $(TYPEDSIGNATURES)
+"""
 Base.size(m::SparseMatrixDict) = (m.m, m.n)
 
+"""
+    $(TYPEDSIGNATURES)
+"""
 SparseArrays.nnz(m::SparseMatrixDict) = length(m.values)
 
+"""
+    $(TYPEDSIGNATURES)
+"""
 function SparseArrays.sparse(mat::SparseMatrixDict{Tv, Ti}) where {Tv, Ti}
     l = length(mat.values)
     I = Vector{Ti}(undef, l)
@@ -50,6 +72,9 @@ function SparseArrays.sparse(mat::SparseMatrixDict{Tv, Ti}) where {Tv, Ti}
     end
 end
 
+"""
+    $(TYPEDSIGNATURES)
+"""
 function Base.:+(dictmatrix::SparseMatrixDict{Tv, Ti}, cscmatrix::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti}
     lnew = length(dictmatrix.values)
     if lnew > 0
@@ -83,6 +108,9 @@ function Base.:+(dictmatrix::SparseMatrixDict{Tv, Ti}, cscmatrix::SparseMatrixCS
     return cscmatrix
 end
 
+"""
+    $(TYPEDSIGNATURES)
+"""
 function Base.sum(dictmatrices::Vector{SparseMatrixDict{Tv, Ti}}, cscmatrix::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti}
     lnew = sum(m -> length(m.values), dictmatrices)
     if lnew > 0

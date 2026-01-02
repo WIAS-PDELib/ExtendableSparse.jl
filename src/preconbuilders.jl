@@ -45,6 +45,39 @@ function LinearAlgebra.ldiv!(
     return Y
 end
 
+"""
+    pointblock(matrix,blocksize)
+
+Create a pointblock matrix.
+"""
+function pointblock(A0::ExtendableSparseMatrixCSC{Tv, Ti}, blocksize) where {Tv, Ti}
+    A = SparseMatrixCSC(A0)
+    colptr = A.colptr
+    rowval = A.rowval
+    nzval = A.nzval
+    n = A.n
+    block = zeros(Tv, blocksize, blocksize)
+    nblock = n ÷ blocksize
+    b = SMatrix{blocksize, blocksize}(block)
+    Tb = typeof(b)
+    Ab = ExtendableSparseMatrixCSC{Tb, Ti}(nblock, nblock)
+
+
+    for i in 1:n
+        for k in colptr[i]:(colptr[i + 1] - 1)
+            j = rowval[k]
+            iblock = (i - 1) ÷ blocksize + 1
+            jblock = (j - 1) ÷ blocksize + 1
+            ii = (i - 1) % blocksize + 1
+            jj = (j - 1) % blocksize + 1
+            block[ii, jj] = nzval[k]
+            rawupdateindex!(Ab, +, SMatrix{blocksize, blocksize}(block), iblock, jblock)
+            block[ii, jj] = zero(Tv)
+        end
+    end
+    return flush!(Ab)
+end
+
 function (b::ILUZeroPreconBuilder)(A0, p)
     A = SparseMatrixCSC(size(A0)..., getcolptr(A0), rowvals(A0), nonzeros(A0))
     return if b.blocksize == 1

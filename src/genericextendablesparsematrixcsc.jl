@@ -1,3 +1,8 @@
+"""
+    $(TYPEDEF)
+
+Single threaded extendable sparse matrix parametrized by sparse matrix extension.
+"""
 mutable struct GenericExtendableSparseMatrixCSC{Tm <: AbstractSparseMatrixExtension, Tv, Ti <: Integer} <: AbstractExtendableSparseMatrixCSC{Tv, Ti}
     """
     Final matrix data
@@ -25,17 +30,29 @@ function GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}(A::SparseMatrixCSC{Tv, Ti}
     )
 end
 
+"""
+    $(TYPEDSIGNATURES)
+"""
 function Base.similar(m::GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}) where {Tm, Tv, Ti}
     return ExtendableSparseMatrixCSC{Tv, Ti}(size(m)...)
 end
 
+"""
+    $(TYPEDSIGNATURES)
+"""
 function Base.similar(m::GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}, ::Type{T}) where {Tm, Tv, Ti, T}
     return ExtendableSparseMatrixCSC{T, Ti}(size(m)...)
 end
 
 
+"""
+    $(TYPEDSIGNATURES)
+"""
 nnznew(ext::GenericExtendableSparseMatrixCSC) = nnz(ext.xmatrix)
 
+"""
+    $(TYPEDSIGNATURES)
+"""
 function reset!(ext::GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}) where {Tm, Tv, Ti}
     m, n = size(ext.cscmatrix)
     ext.cscmatrix = spzeros(Tv, Ti, m, n)
@@ -44,6 +61,9 @@ function reset!(ext::GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}) where {Tm, Tv
 end
 
 
+"""
+    $(TYPEDSIGNATURES)
+"""
 function flush!(ext::GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}) where {Tm, Tv, Ti}
     if nnz(ext.xmatrix) > 0
         ext.cscmatrix = ext.xmatrix + ext.cscmatrix
@@ -52,14 +72,35 @@ function flush!(ext::GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}) where {Tm, Tv
     return ext
 end
 
+"""
+    $(TYPEDSIGNATURES)
+"""
 function SparseArrays.sparse(ext::GenericExtendableSparseMatrixCSC)
     flush!(ext)
     return ext.cscmatrix
 end
 
+"""
+    $(TYPEDSIGNATURES)
+"""
 function Base.setindex!(
         ext::GenericExtendableSparseMatrixCSC,
-        v::Union{Number, AbstractVecOrMat},
+        v::Any,
+        i::Integer,
+        j::Integer
+    )
+    k = findindex(ext.cscmatrix, i, j)
+    return if k > 0
+        ext.cscmatrix.nzval[k] = v
+    else
+        setindex!(ext.xmatrix, v, i, j)
+    end
+end
+
+# to resolve ambiguity
+function Base.setindex!(
+        ext::GenericExtendableSparseMatrixCSC,
+        v::AbstractVecOrMat,
         i::Integer,
         j::Integer
     )
@@ -72,6 +113,9 @@ function Base.setindex!(
 end
 
 
+"""
+    $(TYPEDSIGNATURES)
+"""
 function Base.getindex(
         ext::GenericExtendableSparseMatrixCSC,
         i::Integer,
@@ -85,6 +129,9 @@ function Base.getindex(
     end
 end
 
+"""
+    $(TYPEDSIGNATURES)
+"""
 function rawupdateindex!(
         ext::GenericExtendableSparseMatrixCSC,
         op,
@@ -101,6 +148,9 @@ function rawupdateindex!(
     end
 end
 
+"""
+    $(TYPEDSIGNATURES)
+"""
 function updateindex!(
         ext::GenericExtendableSparseMatrixCSC,
         op,

@@ -131,9 +131,8 @@ end
 """
 $(SIGNATURES)
 
-Create SparseMatrixCSC via COO intermedite arrays
+Create SparseMatrixCSC via COO intermedite arrays. Just for benchmarking.
 """
-
 function fdrand_coo(T, nx, ny = 1, nz = 1; rand = () -> rand())
     N = nx * ny * nz
     I = zeros(Int64, 0)
@@ -186,6 +185,7 @@ function fdrand_coo(T, nx, ny = 1, nz = 1; rand = () -> rand())
     end
     return sparse(I, J, V)
 end
+
 """
 $(SIGNATURES)
 
@@ -265,69 +265,3 @@ function fdrand(
 end
 
 fdrand(nx, ny = 1, nz = 1; kwargs...) = fdrand(Float64, nx, ny, nz; kwargs...)
-
-### for use with LinearSolve.jl
-function solverbenchmark(
-        T,
-        solver,
-        nx,
-        ny = 1,
-        nz = 1;
-        symmetric = false,
-        matrixtype = ExtendableSparseMatrix,
-        seconds = 0.5,
-        repeat = 1,
-        tol = sqrt(eps(Float64))
-    )
-    A = fdrand(T, nx, ny, nz; symmetric, matrixtype)
-    n = size(A, 1)
-    x = rand(n)
-    b = A * x
-    u = solver(A, b)
-    nrm = norm(u - x, 1) / n
-    if nrm > tol
-        error("solution  inaccurate: $((nx, ny, nz)), |u-exact|=$nrm")
-    end
-    secs = 0.0
-    nsol = 0
-    tmin = 1.0e30
-    while secs < seconds
-        t = @elapsed solver(A, b)
-        secs += t
-        tmin = min(tmin, t)
-        nsol += 1
-    end
-    return tmin
-end
-
-function solverbenchmark(
-        T,
-        solver;
-        dim = 1,
-        nsizes = 10,
-        sizes = [10 * 2^i for i in 1:nsizes],
-        symmetric = false,
-        matrixtype = ExtendableSparseMatrix,
-        seconds = 0.1,
-        tol = sqrt(eps(Float64))
-    )
-    if dim == 1
-        ns = sizes
-    elseif dim == 2
-        ns = [(Int(ceil(x^(1 / 2))), Int(ceil(x^(1 / 2)))) for x in sizes]
-    elseif dim == 3
-        ns = [
-            (Int(ceil(x^(1 / 3))), Int(ceil(x^(1 / 3))), Int(ceil(x^(1 / 3))))
-                for
-                x in sizes
-        ]
-    end
-    times = zeros(0)
-    sizes = zeros(Int, 0)
-    for s in ns
-        t = solverbenchmark(T, solver, s...; symmetric, matrixtype, seconds, tol)
-        push!(times, t)
-        push!(sizes, prod(s))
-    end
-    return sizes, times
-end

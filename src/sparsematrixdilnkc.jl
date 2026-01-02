@@ -1,7 +1,7 @@
 """
         $(TYPEDEF)
     
-    Modification of SparseMatrixLNK where the pointer to first index of
+Modification of SparseMatrixLNK where the pointer to first index of
 column j is stored in a dictionary.
     """
 mutable struct SparseMatrixDILNKC{Tv, Ti <: Integer} <: AbstractSparseMatrixExtension{Tv, Ti}
@@ -54,7 +54,7 @@ mutable struct SparseMatrixDILNKC{Tv, Ti <: Integer} <: AbstractSparseMatrixExte
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
     
 Constructor of empty matrix.
 """
@@ -63,7 +63,7 @@ function SparseMatrixDILNKC{Tv, Ti}(m, n) where {Tv, Ti <: Integer}
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
     
 Constructor of empty matrix.
 """
@@ -75,21 +75,21 @@ function SparseMatrixDILNKC(
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
     
 Constructor of empty matrix.
 """
 SparseMatrixDILNKC(valuetype::Type{Tv}, m, n) where {Tv} = SparseMatrixDILNKC(Tv, Int, m, n)
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
     
 Constructor of empty matrix.
 """
 SparseMatrixDILNKC(m, n) = SparseMatrixDILNKC(Float64, m, n)
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
     
 Constructor from SparseMatrixCSC.
 
@@ -108,7 +108,7 @@ function SparseMatrixDILNKC(csc::SparseArrays.SparseMatrixCSC{Tv, Ti}) where {
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
     
 Find index in matrix.
 """
@@ -133,7 +133,7 @@ function findindex(lnk::SparseMatrixDILNKC, i, j)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
     
 Return value stored for entry or zero if not found
 """
@@ -147,7 +147,7 @@ function Base.getindex(lnk::SparseMatrixDILNKC{Tv, Ti}, i, j) where {Tv, Ti}
 end
 
 """
-    $(SIGNATURES)
+    $(TYPEDSIGNATURES)
 
 Add entry.
 """
@@ -181,7 +181,7 @@ function addentry!(lnk::SparseMatrixDILNKC, i, j, k, k0)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
     
 Update value of existing entry, otherwise extend matrix if v is nonzero.
 """
@@ -203,7 +203,7 @@ function Base.setindex!(lnk::SparseMatrixDILNKC, v, i, j)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Update element of the matrix  with operation `op`. 
 It assumes that `op(0,0)==0`. If `v` is zero, no new 
@@ -223,7 +223,7 @@ function updateindex!(lnk::SparseMatrixDILNKC{Tv, Ti}, op, v, i, j) where {Tv, T
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Update element of the matrix  with operation `op`. 
 It assumes that `op(0,0)==0`. If `v` is zero a new entry
@@ -241,14 +241,14 @@ function rawupdateindex!(lnk::SparseMatrixDILNKC{Tv, Ti}, op, v, i, j) where {Tv
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Return tuple containing size of the matrix.
 """
 Base.size(lnk::SparseMatrixDILNKC) = (lnk.m, lnk.n)
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Return number of nonzero entries.
 """
@@ -256,7 +256,7 @@ SparseArrays.nnz(lnk::SparseMatrixDILNKC) = lnk.nnz
 
 
 """
-    $(SIGNATURES)
+    $(TYPEDSIGNATURES)
 Add lnk and csc via interim COO (coordinate) format, i.e. arrays I,J,V.
 """
 function add_via_COO(
@@ -297,7 +297,7 @@ end
 
 
 """
-    $(SIGNATURES)
+    $(TYPEDSIGNATURES)
 Add lnk and csc without creation of intermediate data.
 (to be fixed)
 """
@@ -396,7 +396,7 @@ end
 
 
 """
-    $(SIGNATURES)
+    $(TYPEDSIGNATURES)
 
 Add SparseMatrixCSC matrix and [`SparseMatrixDILNKC`](@ref)  lnk, returning a SparseMatrixCSC
 """
@@ -455,7 +455,7 @@ end
 
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
     
 Constructor from SparseMatrixDILNKC.
 

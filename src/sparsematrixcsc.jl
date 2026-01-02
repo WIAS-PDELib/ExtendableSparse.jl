@@ -1,5 +1,5 @@
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Return index corresponding to entry [i,j] in the array of nonzeros,
 if the entry exists, otherwise, return 0.
@@ -23,7 +23,7 @@ function findindex(csc::SparseMatrixCSC{T}, i, j) where {T}
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Update element of the matrix  with operation `op` without
 introducing new nonzero elements.
@@ -59,7 +59,7 @@ function updateindex!(csc::SparseMatrixCSC{Tv, Ti}, op, v, i, j) where {Tv, Ti <
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Trivial flush! method for allowing to run the code with both `ExtendableSparseMatrix` and
 `SparseMatrixCSC`.
@@ -67,7 +67,7 @@ Trivial flush! method for allowing to run the code with both `ExtendableSparseMa
 flush!(csc::SparseMatrixCSC) = csc
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Hash of csc matrix pattern. 
 """
