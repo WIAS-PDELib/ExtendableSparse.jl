@@ -2,6 +2,7 @@ module test_constructors
 using Test
 using LinearAlgebra
 using ExtendableSparse
+using ExtendableSparse: SparseMatrixLNK
 using SparseArrays
 using Random
 using MultiFloats

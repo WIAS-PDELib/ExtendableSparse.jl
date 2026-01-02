@@ -1,17 +1,28 @@
+using Aqua, ExplicitImports
+
 using LinearAlgebra
 using SparseArrays
 using ExtendableSparse
 using Printf
 using BenchmarkTools
-
 using MultiFloats
 using ForwardDiff
-using ExplicitImports
 
 @testset "ExplicitImports" begin
     @test ExplicitImports.check_no_implicit_imports(ExtendableSparse) === nothing
     @test ExplicitImports.check_no_stale_explicit_imports(ExtendableSparse) === nothing
 end
+
+@testset "Aqua" begin
+    Aqua.test_all(ExtendableSparse)
+end
+
+@testset "UndocumentedNames" begin
+    if isdefined(Docs, :undocumented_names) # >=1.11
+        @test isempty(Docs.undocumented_names(ExtendableSparse))
+    end
+end
+
 
 @testset "Parallel" begin
     include("test_parallel.jl")

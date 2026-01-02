@@ -1,6 +1,7 @@
 module test_symmetric
 using Test
 using ExtendableSparse
+using ExtendableSparse: sprand_sdd!
 using LinearAlgebra
 
 ##############################################

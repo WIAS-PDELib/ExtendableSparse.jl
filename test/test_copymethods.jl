@@ -1,6 +1,7 @@
 module test_copymethods
 using Test
 using ExtendableSparse
+using ExtendableSparse: SparseMatrixLNK
 using SparseArrays
 using Random
 using MultiFloats

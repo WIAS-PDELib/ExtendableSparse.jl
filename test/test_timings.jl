@@ -1,6 +1,7 @@
 module test_timings
 using Test
 using ExtendableSparse
+using ExtendableSparse: SparseMatrixLNK
 using SparseArrays
 using Random
 using MultiFloats
