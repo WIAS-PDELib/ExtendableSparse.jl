@@ -6,7 +6,7 @@ The following example uses [`fdrand`](@ref) to create a test matrix and solve
 the corresponding linear system of equations.
 
 ```@example
-using ExtendableSparse
+using ExtendableSparse: ExtendableSparseMatrix, fdrand
 A = fdrand(10, 10, 10; matrixtype = ExtendableSparseMatrix)
 x = ones(1000)
 b = A * x
@@ -18,7 +18,7 @@ This works as well for number types besides `Float64` and related, in this case,
 by default a LU factorization based on Sparspak is used.
 
 ```@example
-using ExtendableSparse
+using ExtendableSparse: ExtendableSparseMatrix, fdrand
 using MultiFloats
 A = fdrand(Float64x2, 10, 10, 10; matrixtype = ExtendableSparseMatrix)
 x = ones(Float64x2,1000)
@@ -38,7 +38,7 @@ AbstractSparseMatrixCSC interface.
 The same problem can be solved via `LinearSolve.jl`:
 
 ```@example
-using ExtendableSparse
+using ExtendableSparse: ExtendableSparseMatrix, fdrand
 using LinearSolve
 A = fdrand(10, 10, 10; matrixtype = ExtendableSparseMatrix)
 x = ones(1000)
@@ -48,7 +48,7 @@ sum(y)
 ```
 
 ```@example
-using ExtendableSparse
+using ExtendableSparse: ExtendableSparseMatrix, fdrand
 using LinearSolve
 using MultiFloats
 A = fdrand(Float64x2, 10, 10, 10; matrixtype = ExtendableSparseMatrix)
@@ -65,7 +65,7 @@ keyword argument](https://docs.sciml.ai/LinearSolve/stable/basics/Preconditioner
 to the iterative solver specification.
 
 ```@example
-using ExtendableSparse
+using ExtendableSparse: ExtendableSparseMatrix, fdrand
 using LinearSolve 
 using ExtendableSparse: ILUZeroPreconBuilder
 A = fdrand(10, 10, 10; matrixtype = ExtendableSparseMatrix)
@@ -86,8 +86,6 @@ from some other packages. In the future, these packages may provide this functio
 ```@docs
 ExtendableSparse.ILUZeroPreconBuilder
 ExtendableSparse.ILUTPreconBuilder
-ExtendableSparse.SmoothedAggregationPreconBuilder
-ExtendableSparse.RugeStubenPreconBuilder
 ```
 
 In addition, ExtendableSparse implements some preconditioners:
@@ -106,7 +104,7 @@ ExtendableSparse.LinearSolvePreconBuilder
 
 
 Block preconditioner constructors are provided as well
-```@docs;  canonical=false
+```@docs
 ExtendableSparse.BlockPreconBuilder
 ```
 
@@ -114,9 +112,8 @@ ExtendableSparse.BlockPreconBuilder
 The example beloww shows how to create a  block Jacobi preconditioner where the blocks are defined by even and odd
 degrees of freedom, and the diagonal blocks are solved using UMFPACK.
 ```@example
-using ExtendableSparse
 using LinearSolve 
-using ExtendableSparse: LinearSolvePreconBuilder, BlockPreconBuilder
+using ExtendableSparse: LinearSolvePreconBuilder, BlockPreconBuilder, ExtendableSparseMatrix, fdrand
 A = fdrand(10, 10, 10; matrixtype = ExtendableSparseMatrix)
 x = ones(1000)
 b = A * x
@@ -129,23 +126,3 @@ sum(y)
 `umpfackpreconbuilder` e.g. could be replaced by `SmoothedAggregationPreconBuilder()`. Moreover, this approach
 works for any `AbstractSparseMatrixCSC`.
 
-
-## Deprecated API
-Passing a preconditioner via the `Pl` or `Pr` keyword arguments
-will be deprecated in LinearSolve. ExtendableSparse used to
-export a number of wrappers for preconditioners from other packages
-for this purpose. This approach is deprecated as of v1.6 and will be removed
-with v2.0.
-
-```@example
-using ExtendableSparse
-using LinearSolve
-using SparseArray
-using ILUZero
-A = fdrand(10, 10, 10; matrixtype = ExtendableSparseMatrix)
-x = ones(1000)
-b = A * x
-y = LinearSolve.solve(LinearProblem(A, b), KrylovJL_CG();
-                      Pl = ILUZero.ilu0(SparseMatrixCSC(A))).u
-sum(y)
-```
