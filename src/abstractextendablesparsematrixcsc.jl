@@ -250,7 +250,13 @@ end
 
 # to resolve ambiguity
 function LinearAlgebra.mul!(::SparseArrays.AbstractSparseMatrixCSC, ::ExtendableSparse.AbstractExtendableSparseMatrixCSC, ::LinearAlgebra.Diagonal)
-    throw(MethodError("mul!(::AbstractSparseMatrixCSC, ::AbstractExtendableSparseMatrixCSC,::Diagonal) is impossible"))
+    throw(MethodError("mul!(::AbstractSparseMatrixCSC, ::AbstractExtendableSparseMatrixCSC, ::Diagonal) is impossible"))
+    return nothing
+end
+
+# to resolve ambiguity
+function LinearAlgebra.mul!(::AbstractMatrix, ::ExtendableSparse.AbstractExtendableSparseMatrixCSC, ::LinearAlgebra.AbstractTriangular)
+    throw(MethodError("mul!(::AbstractMatrix, ::AbstractExtendableSparseMatrixCSC, ::AbstractTriangular) is impossible"))
     return nothing
 end
 

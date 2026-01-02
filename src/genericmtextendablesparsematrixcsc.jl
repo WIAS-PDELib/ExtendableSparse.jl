@@ -212,3 +212,8 @@ function LinearAlgebra.mul!(::SparseArrays.AbstractSparseMatrixCSC, ::Extendable
     throw(MethodError("mul!(::AbstractSparseMatrixCSC, ::GenericMTExtendableSparseMatrixCSC,::Diagonal) is impossible"))
     return nothing
 end
+
+function LinearAlgebra.mul!(::AbstractMatrix, ::ExtendableSparse.GenericMTExtendableSparseMatrixCSC, ::LinearAlgebra.AbstractTriangular)
+    throw(MethodError("mul!(::AbstractMatrix, ::GenericMTExtendableSparseMatrixCSC, ::AbstractTriangular) is impossible"))
+    return nothing
+end
