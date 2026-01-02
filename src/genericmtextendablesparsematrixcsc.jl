@@ -2,7 +2,7 @@
     $(TYPEDEF)
 
 
-Extendable sparse matrix parametrized by sparse matrix extension allowin multithreaded assembly.
+Extendable sparse matrix parametrized by sparse matrix extension allowing multithreaded assembly.
 
 """
 mutable struct GenericMTExtendableSparseMatrixCSC{Tm <: AbstractSparseMatrixExtension, Tv, Ti <: Integer} <: AbstractExtendableSparseMatrixCSC{Tv, Ti}
