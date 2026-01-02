@@ -24,4 +24,3 @@ Pages = ["sparsematrixdilnkc.jl"]
 Modules = [ExtendableSparse]
 Pages = ["sparsematrixdict.jl"]
 ```
-

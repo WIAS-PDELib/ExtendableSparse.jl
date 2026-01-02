@@ -125,4 +125,3 @@ sum(y)
 ```
 `umpfackpreconbuilder` e.g. could be replaced by `SmoothedAggregationPreconBuilder()`. Moreover, this approach
 works for any `AbstractSparseMatrixCSC`.
-

@@ -16,7 +16,7 @@ function mkdocs()
             "extensions.md",
             "linearsolve.md",
             "misc.md",
-            "index.md"
+            "index.md",
         ]
     )
 end

@@ -47,4 +47,3 @@ Aliased to  [`@STExtendableSparseMatrixCSC`](@ref) to ensure backward compatibil
 to ExtendableSparse v1.x.
 """
 const ExtendableSparseMatrix = STExtendableSparseMatrixCSC
-
