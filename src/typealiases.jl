@@ -3,7 +3,7 @@
 
 Multithreaded extendable sparse matrix  (Experimental).
 
-Aliased to [`GenericMTExtendableSparseMatricCSC`](@ref) with [`SparseMatrixDILNKC`](@ref) scalar matrix parameter.
+Aliased to [`GenericMTExtendableSparseMatrixCSC`](@ref) with [`SparseMatrixDILNKC`](@ref) scalar matrix parameter.
 """
 const MTExtendableSparseMatrixCSC{Tv, Ti} = GenericMTExtendableSparseMatrixCSC{SparseMatrixDILNKC{Tv, Ti}, Tv, Ti}
 MTExtendableSparseMatrixCSC(m, n, args...) = MTExtendableSparseMatrixCSC{Float64, Int64}(m, n, args...)
@@ -13,7 +13,7 @@ MTExtendableSparseMatrixCSC(m, n, args...) = MTExtendableSparseMatrixCSC{Float64
 
 Single threaded extendable sparse matrix (Experimental).
 
-Aliased to [`GenericExtendableSparseMatricCSC`](@ref) with [`SparseMatrixLNK`](@ref) scalar matrix parameter.
+Aliased to [`GenericExtendableSparseMatrixCSC`](@ref) with [`SparseMatrixLNK`](@ref) scalar matrix parameter.
 """
 const STExtendableSparseMatrixCSC{Tv, Ti} = GenericExtendableSparseMatrixCSC{SparseMatrixLNK{Tv, Ti}, Tv, Ti}
 STExtendableSparseMatrixCSC(::Type{Tv}, m::Number, n::Number) where {Tv} = STExtendableSparseMatrixCSC{Tv, Int64}(m, n)
@@ -34,7 +34,7 @@ STExtendableSparseMatrixCSC(I, J, V::AbstractVector, m, n, combine::Function) = 
 """
     ExtendableSparseMatrixCSC
 
-Aliased to  [`@STExtendableSparseMatrixCSC`](@ref) to ensure backward compatibility
+Aliased to  [`STExtendableSparseMatrixCSC`](@ref) to ensure backward compatibility
 to ExtendableSparse v1.x.
 """
 const ExtendableSparseMatrixCSC = STExtendableSparseMatrixCSC
@@ -43,7 +43,7 @@ const ExtendableSparseMatrixCSC = STExtendableSparseMatrixCSC
 """
     ExtendableSparseMatrix
 
-Aliased to  [`@STExtendableSparseMatrixCSC`](@ref) to ensure backward compatibility
+Aliased to  [`STExtendableSparseMatrixCSC`](@ref) to ensure backward compatibility
 to ExtendableSparse v1.x.
 """
 const ExtendableSparseMatrix = STExtendableSparseMatrixCSC

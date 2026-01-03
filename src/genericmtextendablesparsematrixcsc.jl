@@ -2,20 +2,25 @@
     $(TYPEDEF)
 
 
-Extendable sparse matrix parametrized by sparse matrix extension allowing multithreaded assembly.
+Extendable sparse matrix parametrized by sparse matrix extension allowing multithreaded assembly and
+parallel matrix-vector multiplication.
+
+Fields:
+- `cscmatrix`: a SparseMatrixCSC  containg existing matrix entries
+- `xmatrices`: vector of instances of [`AbstractSparseMatrixExtension`](@ref) used to collect new entries
+- `colparts`: vector describing colors of the partitions of the unknowns
+- `partnodes`: vector describing partition of the unknowns
+
+It is assumed that the set of unknowns is partitioned, and the partitioning is colored in such a way that
+several partitions of the same color can be handeled by different threads, both during matrix assembly (which
+in general would use a partition of e.g. finite elements compatible to the partioning of the nodes) and during
+matrix-vector multiplication. This approach is compatible with the current choice of the standard Julia
+sparse  ecosystem which prefers compressed colume storage (CSC) over compressed row storage (CSR).
 
 """
 mutable struct GenericMTExtendableSparseMatrixCSC{Tm <: AbstractSparseMatrixExtension, Tv, Ti <: Integer} <: AbstractExtendableSparseMatrixCSC{Tv, Ti}
-    """
-    Final matrix data
-    """
     cscmatrix::SparseMatrixCSC{Tv, Ti}
-
-    """
-        Vector of dictionaries for new entries
-    """
     xmatrices::Vector{Tm}
-
     colparts::Vector{Ti}
     partnodes::Vector{Ti}
 end

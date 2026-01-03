@@ -1,9 +1,18 @@
 """
         $(TYPEDEF)
     
-Modification of SparseMatrixLNK where the pointer to first index of
-column j is stored in a dictionary.
-    """
+[`AbstractSparseMatrixExtension`](@ref)  where entries are stored as linked list, but
+where  -- in difference to [`SparseMatrixLNK`](@ref) -- the pointer to first index
+of column j is stored in a dictionary.
+
+Thus this format -- similar to [`SparseMatrixDict`](@ref) --  avoids to store a vector of the length of unknowns
+indicating the first column indices, avoiding storage overhead during parallel assembly.
+
+Via the type alias [`MTExtendableSparseMatrixCSC`](@ref), this extension is used as default for handling
+parallel assembly.
+
+$(TYPEDFIELDS)
+"""
 mutable struct SparseMatrixDILNKC{Tv, Ti <: Integer} <: AbstractSparseMatrixExtension{Tv, Ti}
     """
     Number of rows

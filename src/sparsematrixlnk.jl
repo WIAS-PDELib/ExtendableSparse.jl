@@ -1,7 +1,8 @@
 """
 $(TYPEDEF)
 
-Struct to hold sparse matrix in the linked list format.
+[`AbstractSparseMatrixExtension`](@ref)  where entries are organized in the linked list
+sparse matrix format. This was the standard structure in ExtendableSparse v1.x.
 
 Modeled after the linked list sparse matrix format described in 
 the  [whitepaper](https://www-users.cs.umn.edu/~saad/software/SPARSKIT/paper.ps)
@@ -14,6 +15,11 @@ is also available in the debian/science gitlab.
 The advantage of the linked list structure is the fact that upon insertion
 of a new entry, the arrays describing the structure can grow at their respective ends and
 can be conveniently updated via `push!`.  No copying of existing data is necessary.
+
+Via the type aliases [`STExtendableSparseMatrixCSC`](@ref), [`ExtendableSparseMatrixCSC`](@ref),
+and [`ExtendableSparseMatrix`](@ref) this extension is used as default for handling
+scalar assembly.
+
 
 $(TYPEDFIELDS)
 """

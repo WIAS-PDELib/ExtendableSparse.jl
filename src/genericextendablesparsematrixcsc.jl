@@ -2,16 +2,13 @@
     $(TYPEDEF)
 
 Single threaded extendable sparse matrix parametrized by sparse matrix extension.
+
+Fields:
+- `cscmatrix`: a SparseMatrixCSC  containg existing matrix entries
+- `xmatrix`: instance of an [`AbstractSparseMatrixExtension`](@ref) which is used to collect new entries
 """
 mutable struct GenericExtendableSparseMatrixCSC{Tm <: AbstractSparseMatrixExtension, Tv, Ti <: Integer} <: AbstractExtendableSparseMatrixCSC{Tv, Ti}
-    """
-    Final matrix data
-    """
     cscmatrix::SparseMatrixCSC{Tv, Ti}
-
-    """
-    Matrix for new entries
-    """
     xmatrix::Tm
 end
 

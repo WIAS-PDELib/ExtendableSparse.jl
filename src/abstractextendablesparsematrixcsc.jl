@@ -5,11 +5,15 @@ Abstract super type for extendable CSC matrices. It implements what is being dis
 as the "AbstractSparseMatrixCSC interfacee"
 
 Subtypes must implement:
-- SparseArrays.sparse  flush+return SparseMatrixCSC
+- `SparseArrays.sparse`:  flush+return SparseMatrixCSC
 - Constructor from SparseMatrixCSC
-- rawupdateindex!
-- reset!: empty all internals, just keep size 
-- flush!: (re)build SparseMatrixCSC, incorporating new entries
+- [`rawupdateindex!`](@ref) 
+- [`reset!`](@ref): empty all internals, just keep size 
+- [`flush!`](@ref): (re)build SparseMatrixCSC, incorporate new entries
+
+Subtypes of this type would contain a SparseMatrixCSC which is used in linear algebra
+operations. In addition they would contain data structures for efficiently adding new entries,
+like instances or vectors of instances of subtypes of [`AbstractSparseMatrixExtension`](@ref).
 """
 abstract type AbstractExtendableSparseMatrixCSC{Tv, Ti} <: AbstractSparseMatrixCSC{Tv, Ti} end
 

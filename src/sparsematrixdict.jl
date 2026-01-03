@@ -1,12 +1,32 @@
 """
     $(TYPEDEF)    
 
-Sparse matrix where entries are organized as dictionary.
+[`AbstractSparseMatrixExtension`](@ref)  extension where entries are organized as dictionary.
+This is meant as an example implementation to show how a sparse matrix
+extension could be implemented. As dictionary access tends to be slow, it
+is not meant for general use.
+
+An advantage of this format is the fact that it avoids to store a vector of the length of unknowns
+indicating the first column indices, avoiding storage overhead during parallel assembly.
+
+$(TYPEDFIELDS)
 """
 mutable struct SparseMatrixDict{Tv, Ti} <: AbstractSparseMatrixExtension{Tv, Ti}
+    """
+    Number of rows
+    """
     m::Ti
+
+    """
+    Number of columns
+    """
     n::Ti
+
+    """
+    Dictionary with pairs of integers as keys containing values
+    """
     values::Dict{Pair{Ti, Ti}, Tv}
+
     SparseMatrixDict{Tv, Ti}(m, n) where {Tv, Ti} = new(m, n, Dict{Pair{Ti, Ti}, Tv}())
 end
 
