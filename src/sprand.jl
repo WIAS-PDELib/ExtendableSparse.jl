@@ -69,20 +69,20 @@ function fdrand!(
         error("Matrix size mismatch")
     end
 
-    _flush!(m::ExtendableSparseMatrix) = flush!(m)
+    _flush!(m::AbstractExtendableSparseMatrixCSC) = flush!(m)
     _flush!(m::SparseMatrixCSC) = m
-    _flush!(m::SparseMatrixLNK) = m
-    _flush!(m::AbstractMatrix) = m
+    _flush!(m::AbstractSparseMatrixExtension) = m
 
     _nonzeros(m::Matrix) = vec(m)
     _nonzeros(m::ExtendableSparseMatrix) = nonzeros(m)
     _nonzeros(m::SparseMatrixLNK) = m.nzval
+    _nonzeros(m::SparseMatrixDILNKC) = m.nzval
     _nonzeros(m::SparseMatrixCSC) = nonzeros(m)
 
     zero!(A::AbstractMatrix{T}) where {T} = A .= zero(T)
     zero!(A::SparseMatrixCSC{T, Ti}) where {T, Ti} = _nonzeros(A) .= zero(T)
-    zero!(A::ExtendableSparseMatrix{T, Ti}) where {T, Ti} = _nonzeros(A) .= zero(T)
-    zero!(A::SparseMatrixLNK{T, Ti}) where {T, Ti} = _nonzeros(A) .= zero(T)
+    zero!(A::AbstractExtendableSparseMatrixCSC) = reset!(A)
+    zero!(A::AbstractSparseMatrixExtension) = nothing
 
     zero!(A)
 
@@ -130,9 +130,8 @@ end
 """
 $(SIGNATURES)
 
-Create SparseMatrixCSC via COO intermedite arrays
+Create SparseMatrixCSC via COO intermedite arrays. Just for benchmarking.
 """
-
 function fdrand_coo(T, nx, ny = 1, nz = 1; rand = () -> rand())
     N = nx * ny * nz
     I = zeros(Int64, 0)
@@ -185,6 +184,7 @@ function fdrand_coo(T, nx, ny = 1, nz = 1; rand = () -> rand())
     end
     return sparse(I, J, V)
 end
+
 """
 $(SIGNATURES)
 
@@ -236,13 +236,14 @@ function fdrand(
         symmetric = true
     ) where {T}
     N = nx * ny * nz
+
     if matrixtype == :COO
         A = fdrand_coo(T, nx, ny, nz; rand = rand)
     else
-        if matrixtype == ExtendableSparseMatrix
-            A = ExtendableSparseMatrix(T, N, N)
-        elseif matrixtype == SparseMatrixLNK
-            A = SparseMatrixLNK(T, N, N)
+        if matrixtype <: AbstractExtendableSparseMatrixCSC
+            A = matrixtype(T, N, N)
+        elseif matrixtype <: AbstractSparseMatrixExtension
+            A = matrixtype(T, N, N)
         elseif matrixtype == SparseMatrixCSC
             A = spzeros(T, N, N)
         elseif matrixtype == Tridiagonal
@@ -260,69 +261,3 @@ function fdrand(
 end
 
 fdrand(nx, ny = 1, nz = 1; kwargs...) = fdrand(Float64, nx, ny, nz; kwargs...)
-
-### for use with LinearSolve.jl
-function solverbenchmark(
-        T,
-        solver,
-        nx,
-        ny = 1,
-        nz = 1;
-        symmetric = false,
-        matrixtype = ExtendableSparseMatrix,
-        seconds = 0.5,
-        repeat = 1,
-        tol = sqrt(eps(Float64))
-    )
-    A = fdrand(T, nx, ny, nz; symmetric, matrixtype)
-    n = size(A, 1)
-    x = rand(n)
-    b = A * x
-    u = solver(A, b)
-    nrm = norm(u - x, 1) / n
-    if nrm > tol
-        error("solution  inaccurate: $((nx, ny, nz)), |u-exact|=$nrm")
-    end
-    secs = 0.0
-    nsol = 0
-    tmin = 1.0e30
-    while secs < seconds
-        t = @elapsed solver(A, b)
-        secs += t
-        tmin = min(tmin, t)
-        nsol += 1
-    end
-    return tmin
-end
-
-function solverbenchmark(
-        T,
-        solver;
-        dim = 1,
-        nsizes = 10,
-        sizes = [10 * 2^i for i in 1:nsizes],
-        symmetric = false,
-        matrixtype = ExtendableSparseMatrix,
-        seconds = 0.1,
-        tol = sqrt(eps(Float64))
-    )
-    if dim == 1
-        ns = sizes
-    elseif dim == 2
-        ns = [(Int(ceil(x^(1 / 2))), Int(ceil(x^(1 / 2)))) for x in sizes]
-    elseif dim == 3
-        ns = [
-            (Int(ceil(x^(1 / 3))), Int(ceil(x^(1 / 3))), Int(ceil(x^(1 / 3))))
-                for
-                x in sizes
-        ]
-    end
-    times = zeros(0)
-    sizes = zeros(Int, 0)
-    for s in ns
-        t = solverbenchmark(T, solver, s...; symmetric, matrixtype, seconds, tol)
-        push!(times, t)
-        push!(sizes, prod(s))
-    end
-    return sizes, times
-end

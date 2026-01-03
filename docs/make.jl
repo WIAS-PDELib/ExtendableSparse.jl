@@ -1,4 +1,4 @@
-using Documenter, ExtendableSparse, AlgebraicMultigrid, IncompleteLU, Sparspak, LinearAlgebra
+using Documenter, ExtendableSparse, AlgebraicMultigrid, IncompleteLU, Sparspak, LinearAlgebra, SparseArrays, Base, InteractiveUtils
 
 function mkdocs()
     return makedocs(;
@@ -10,13 +10,13 @@ function mkdocs()
         authors = "J. Fuhrmann",
         repo = "https://github.com/WIAS-PDELib/ExtendableSparse.jl",
         pages = [
-            "Home" => "index.md",
+            "Home" => "home.md",
             "example.md",
             "extsparse.md",
+            "extensions.md",
             "linearsolve.md",
-            "internal.md",
-            "iter.md",
-            "changes.md",
+            "misc.md",
+            "index.md",
         ]
     )
 end

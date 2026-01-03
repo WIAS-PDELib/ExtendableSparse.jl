@@ -3,6 +3,7 @@
 [![Build status](https://github.com/WIAS-PDELib/ExtendableSparse.jl/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/WIAS-PDELib/ExtendableSparse.jl/actions/workflows/ci.yml?query=branch%3Amaster)
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://WIAS-PDELib.github.io/ExtendableSparse.jl/stable)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://WIAS-PDELib.github.io/ExtendableSparse.jl/dev)
+[![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3530554.svg)](https://doi.org/10.5281/zenodo.3530554)
 [![code style: runic](https://img.shields.io/badge/code_style-%E1%9A%B1%E1%9A%A2%E1%9A%BE%E1%9B%81%E1%9A%B2-black)](https://github.com/fredrikekre/Runic.jl)
 
@@ -42,7 +43,7 @@ With the help of [Sparspak.jl](https://github.com/PetrKryslUCSD/Sparspak.jl), th
 `sparse(A)` creates a standard `SparseMatrixCSC` from a filled `ExtendableSparseMatrix` which can be used e.g. to create preconditioners. So one can instead perform e.g.
 
 ```
-LinearSolve.solve(p, KrylovJL_CG(); Pl = ILUZero.ilu0(sparse(A)))
+LinearSolve.solve(p, KrylovJL_CG(; precs=ILUZeroPreconBuilder()))
 ```
 
 ## Rationale
@@ -93,27 +94,6 @@ Base.setindex!(A, %2, 1, 2)
 triggering two index searches, one for `getindex!` and another one for `setindex!`.
 
 See [Julia issue #15630](https://github.com/JuliaLang/julia/issues/15630) for a discussion on this.
-
-## Factorizations and Preconditioners
-
-The package provides a common API for factorizations and preconditioners supporting
-series of solutions of similar problem as they occur during nonlinear and transient solves.
-For details, see the [corresponding documentation](https://WIAS-PDELib.github.io/ExtendableSparse.jl/stable/iter/).
-
-With the advent of LinearSolve.jl, this functionality probably will be reduced to some core cases.
-
-### Interfaces to other packages
-
-The package directly provides interfaces to other sparse matrix solvers and preconditioners. Dependencies on these
-packages are handled via [Requires.jl](https://github.com/JuliaPackaging/Requires.jl).
-Currently, support includes:
-
-  - [Pardiso.jl](https://github.com/JuliaSparse/Pardiso.jl) (both ["project Pardiso"](https://pardiso-project.org)
-    and [MKL Pardiso](https://software.intel.com/content/www/us/en/develop/documentation/onemkl-developer-reference-fortran/top/sparse-solver-routines/onemkl-pardiso-parallel-direct-sparse-solver-interface.html))
-  - [IncompleteLU.jl](https://github.com/haampie/IncompleteLU.jl)
-  - [AlgebraicMultigrid.jl](https://github.com/JuliaLinearAlgebra/AlgebraicMultigrid.jl) (Ruge-Stüben AMG)
-
-For a similar approach, see [Preconditioners.jl](https://github.com/mohamed82008/Preconditioners.jl)
 
 ## Alternatives
 

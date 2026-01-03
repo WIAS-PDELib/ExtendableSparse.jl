@@ -1,33 +1,106 @@
 """
+    abstract type AbstractExtendableSparseMatrixCSC{Tv, Ti} <: AbstractSparseMatrixCSC{Tv, Ti} end
+
+Abstract super type for extendable CSC matrices. It implements what is being discussed
+as the "AbstractSparseMatrixCSC interfacee"
 
 Subtypes must implement:
-- SparseArrays.sparse (may be should be sparse! ?) flush+return SparseMatrixCSC
+- `SparseArrays.sparse`:  flush+return SparseMatrixCSC
 - Constructor from SparseMatrixCSC
-rawupdateindex!
-reset!: empty all internals, just keep size 
-"""
+- [`rawupdateindex!`](@ref) 
+- [`reset!`](@ref): empty all internals, just keep size 
+- [`flush!`](@ref): (re)build SparseMatrixCSC, incorporate new entries
 
+Subtypes of this type would contain a SparseMatrixCSC which is used in linear algebra
+operations. In addition they would contain data structures for efficiently adding new entries,
+like instances or vectors of instances of subtypes of [`AbstractSparseMatrixExtension`](@ref).
+"""
 abstract type AbstractExtendableSparseMatrixCSC{Tv, Ti} <: AbstractSparseMatrixCSC{Tv, Ti} end
 
 """
-$(SIGNATURES)
+    SparseArrays.sparse(A::AbstractExtendableSparseMatrixCSC)
+
+Return `SparseMatrixCSC` which contains all matrix entries introduced so far.
+"""
+function SparseArrays.sparse(A::AbstractExtendableSparseMatrixCSC)
+    throw(MethodError("Missing implementation of `sparse(::$(typeof(A)))`"))
+end
+
+"""
+    rawupdateindex!(A::AbstractExtendableSparseMatrixCSC,op,v,i,j,part = 1)
+
+Add or update entry of A: `A[i,j]=op(A[i,j],v)` without checking  if a zero
+is inserted. The optional parameter part denotes the partition.
+"""
+function rawupdateindex!(A::AbstractExtendableSparseMatrixCSC, op, v, i, j, part = 1)
+    throw(MethodError("Missing implementation of `rawupdateindex!(::$(typeof(A)),...)`"))
+end
+
+function flush!(A::AbstractExtendableSparseMatrixCSC)
+    throw(MethodError("Missing implementation of `flush!(::$(typeof(A)))`"))
+end
+
+function reset!(A::AbstractExtendableSparseMatrixCSC)
+    throw(MethodError("Missing implementation of `reset!(::$(typeof(A)))`"))
+end
+
+
+"""
+    SparseArrays.nnz(ext::AbstractExtendableSparseMatrixCSC)
 
 [`flush!`](@ref) and return number of nonzeros in ext.cscmatrix.
 """
 SparseArrays.nnz(ext::AbstractExtendableSparseMatrixCSC) = nnz(sparse(ext))
 
 """
-$(SIGNATURES)
+    SparseArrays.nonzeros(ext::AbstractExtendableSparseMatrixCSC) = nonzeros(sparse(ext))
 
 [`flush!`](@ref) and return nonzeros in ext.cscmatrix.
 """
 SparseArrays.nonzeros(ext::AbstractExtendableSparseMatrixCSC) = nonzeros(sparse(ext))
 
+"""
+$(TYPEDSIGNATURES)
+"""
+function SparseArrays.dropzeros!(ext::AbstractExtendableSparseMatrixCSC)
+    return dropzeros!(sparse(ext))
+end
+
+
+"""
+    Base.size(ext::AbstractExtendableSparseMatrixCSC)
+
+Return size of matrix.
+"""
 Base.size(ext::AbstractExtendableSparseMatrixCSC) = size(ext.cscmatrix)
 
 
 """
-$(SIGNATURES)
+    SparseArrays.rowvals(ext::AbstractExtendableSparseMatrixCSC)
+
+[`flush!`](@ref) and return rowvals in ext.cscmatrix.
+"""
+SparseArrays.rowvals(ext::AbstractExtendableSparseMatrixCSC) = rowvals(sparse(ext))
+
+
+"""
+    SparseArrays.findnz(ext::AbstractExtendableSparseMatrixCSC)
+
+[`flush!`](@ref) and return findnz(ext.cscmatrix).
+"""
+SparseArrays.findnz(ext::AbstractExtendableSparseMatrixCSC) = findnz(sparse(ext))
+
+
+"""
+    SparseArrays.getcolptr(ext::AbstractExtendableSparseMatrixCSC)
+
+[`flush!`](@ref) and return colptr of  in ext.cscmatrix.
+"""
+SparseArrays.getcolptr(ext::AbstractExtendableSparseMatrixCSC) = getcolptr(sparse(ext))
+
+
+"""
+    Base.eltype(::AbstractExtendableSparseMatrixCSC{Tv, Ti})
 
 Return element type.
 """
@@ -35,13 +108,16 @@ Base.eltype(::AbstractExtendableSparseMatrixCSC{Tv, Ti}) where {Tv, Ti} = Tv
 
 
 """
-$(SIGNATURES)
-
- Create SparseMatrixCSC from ExtendableSparseMatrix
+    SparseArrays.SparseMatrixCSC(A::AbstractExtendableSparseMatrixCSC)
+Create SparseMatrixCSC from ExtendableSparseMatrix
 """
 SparseArrays.SparseMatrixCSC(A::AbstractExtendableSparseMatrixCSC) = sparse(A)
 
+"""
+    Base.show(::IO, ::MIME"text/plain", ext::AbstractExtendableSparseMatrixCSC)
 
+[`flush!`](@ref) and use the show method of SparseMatrixCSC to show the content.
+"""
 function Base.show(io::IO, ::MIME"text/plain", ext::AbstractExtendableSparseMatrixCSC)
     A = sparse(ext)
     xnnz = nnz(A)
@@ -70,55 +146,30 @@ function Base.show(io::IO, ::MIME"text/plain", ext::AbstractExtendableSparseMatr
 end
 
 
-"""
-$(SIGNATURES)
-
-[`flush!`](@ref) and return rowvals in ext.cscmatrix.
-"""
-SparseArrays.rowvals(ext::AbstractExtendableSparseMatrixCSC) = rowvals(sparse(ext))
-
+SparseArrays._checkbuffers(ext::AbstractExtendableSparseMatrixCSC) = SparseArrays._checkbuffers(sparse(ext))
 
 """
-$(SIGNATURES)
+     Base.:\\(::AbstractExtendableSparseMatrixCSC, b)
 
-[`flush!`](@ref) and return colptr of  in ext.cscmatrix.
-"""
-SparseArrays.getcolptr(ext::AbstractExtendableSparseMatrixCSC) = getcolptr(sparse(ext))
-
-
-"""
-$(SIGNATURES)
-
-[`flush!`](@ref) and return findnz(ext.cscmatrix).
-"""
-SparseArrays.findnz(ext::AbstractExtendableSparseMatrixCSC) = findnz(sparse(ext))
-
-
-@static if VERSION >= v"1.7"
-    SparseArrays._checkbuffers(ext::AbstractExtendableSparseMatrixCSC) = SparseArrays._checkbuffers(sparse(ext))
-end
-
-"""
-    A\b
 
 [`\\`](@ref) for ExtendableSparse. It calls the LU factorization form Sparspak.jl, unless GPL components
 are allowed  in the Julia sysimage and the floating point type of the matrix is Float64 or Complex64.
 In that case, Julias standard `\` is called, which is realized via UMFPACK.
 """
-function LinearAlgebra.:\(
+function Base.:\(
         ext::AbstractExtendableSparseMatrixCSC{Tv, Ti},
         b::AbstractVector
     ) where {Tv, Ti}
-    return SparspakLU(sparse(ext)) \ b
+    return sparspaklu(sparse(ext)) \ b
 end
 
 
 """
-$(SIGNATURES)
+     Base.:\\(Symmetric(::AbstractExtendableSparseMatrixCSC), b)
 
 [`\\`](@ref) for Symmetric{ExtendableSparse}
 """
-function LinearAlgebra.:\(
+function Base.:\(
         symm_ext::Symmetric{Tm, T},
         b::AbstractVector
     ) where {Tm, Ti, T <: AbstractExtendableSparseMatrixCSC{Tm, Ti}}
@@ -126,11 +177,11 @@ function LinearAlgebra.:\(
 end
 
 """
-$(SIGNATURES)
+     Base.:\\(Hermitian(::AbstractExtendableSparseMatrixCSC), b)
 
 [`\\`](@ref) for Hermitian{ExtendableSparse}
 """
-function LinearAlgebra.:\(
+function Base.:\(
         symm_ext::Hermitian{Tm, T},
         b::AbstractVector
     ) where {Tm, Ti, T <: AbstractExtendableSparseMatrixCSC{Tm, Ti}}
@@ -140,7 +191,7 @@ end
 if USE_GPL_LIBS
     for (Tv) in (:Float64, :ComplexF64)
         @eval begin
-            function LinearAlgebra.:\(
+            function Base.:\(
                     ext::AbstractExtendableSparseMatrixCSC{$Tv, Ti},
                     B::AbstractVector
                 ) where {Ti}
@@ -149,7 +200,7 @@ if USE_GPL_LIBS
         end
 
         @eval begin
-            function LinearAlgebra.:\(
+            function Base.:\(
                     symm_ext::Symmetric{
                         $Tv,
                         AbstractExtendableSparseMatrixCSC{
@@ -165,7 +216,7 @@ if USE_GPL_LIBS
         end
 
         @eval begin
-            function LinearAlgebra.:\(
+            function Base.:\(
                     symm_ext::Hermitian{
                         $Tv,
                         AbstractExtendableSparseMatrixCSC{
@@ -183,25 +234,39 @@ if USE_GPL_LIBS
 end # USE_GPL_LIBS
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
-[`flush!`](@ref) and ldiv with ext.cscmatrix
+[`flush!`](@ref) and ldiv! with ext.cscmatrix
 """
-function LinearAlgebra.ldiv!(r, ext::AbstractExtendableSparseMatrixCSC, x)
+function LinearAlgebra.ldiv!(r::AbstractArray, ext::AbstractExtendableSparseMatrixCSC, x::AbstractArray)
     return LinearAlgebra.ldiv!(r, sparse(ext), x)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 [`flush!`](@ref) and multiply with ext.cscmatrix
 """
-function LinearAlgebra.mul!(r, ext::AbstractExtendableSparseMatrixCSC, x)
+function LinearAlgebra.mul!(r::AbstractVecOrMat, ext::AbstractExtendableSparseMatrixCSC, x::AbstractVecOrMat)
     return LinearAlgebra.mul!(r, sparse(ext), x)
 end
 
+
+# to resolve ambiguity
+function LinearAlgebra.mul!(::SparseArrays.AbstractSparseMatrixCSC, ::ExtendableSparse.AbstractExtendableSparseMatrixCSC, ::LinearAlgebra.Diagonal)
+    throw(MethodError("mul!(::AbstractSparseMatrixCSC, ::AbstractExtendableSparseMatrixCSC, ::Diagonal) is impossible"))
+    return nothing
+end
+
+# to resolve ambiguity
+function LinearAlgebra.mul!(::AbstractMatrix, ::ExtendableSparse.AbstractExtendableSparseMatrixCSC, ::LinearAlgebra.AbstractTriangular)
+    throw(MethodError("mul!(::AbstractMatrix, ::AbstractExtendableSparseMatrixCSC, ::AbstractTriangular) is impossible"))
+    return nothing
+end
+
+
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 [`flush!`](@ref) and calculate norm from cscmatrix
 """
@@ -210,7 +275,7 @@ function LinearAlgebra.norm(A::AbstractExtendableSparseMatrixCSC, p::Real = 2)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 [`flush!`](@ref) and calculate opnorm from cscmatrix
 """
@@ -219,7 +284,7 @@ function LinearAlgebra.opnorm(A::AbstractExtendableSparseMatrixCSC, p::Real = 2)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 [`flush!`](@ref) and calculate cond from cscmatrix
 """
@@ -228,7 +293,7 @@ function LinearAlgebra.cond(A::AbstractExtendableSparseMatrixCSC, p::Real = 2)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 [`flush!`](@ref) and check for symmetry of cscmatrix
 """
@@ -237,27 +302,36 @@ function LinearAlgebra.issymmetric(A::AbstractExtendableSparseMatrixCSC)
 end
 
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function Base.:+(A::T, B::T) where {T <: AbstractExtendableSparseMatrixCSC}
     return T(sparse(A) + sparse(B))
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function Base.:-(A::T, B::T) where {T <: AbstractExtendableSparseMatrixCSC}
     return T(sparse(A) - sparse(B))
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function Base.:*(A::T, B::T) where {T <: AbstractExtendableSparseMatrixCSC}
     return T(sparse(A) * sparse(B))
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 """
 function Base.:*(d::Diagonal, ext::T) where {T <: AbstractExtendableSparseMatrixCSC}
     return T(d * sparse(ext))
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 """
 function Base.:*(ext::T, d::Diagonal) where {T <: AbstractExtendableSparseMatrixCSC}
     return T(sparse(ext) * d)
@@ -265,9 +339,7 @@ end
 
 
 """
-$(SIGNATURES)
-
-Add SparseMatrixCSC matrix and [`ExtendableSparseMatrix`](@ref)  ext.
+$(TYPEDSIGNATURES)
 """
 function Base.:+(ext::AbstractExtendableSparseMatrixCSC, csc::SparseMatrixCSC)
     return sparse(ext) + csc
@@ -275,39 +347,37 @@ end
 
 
 """
-$(SIGNATURES)
-
-Subtract  SparseMatrixCSC matrix from  [`ExtendableSparseMatrix`](@ref)  ext.
+$(TYPEDSIGNATURES)
 """
 function Base.:-(ext::AbstractExtendableSparseMatrixCSC, csc::SparseMatrixCSC)
     return sparse(ext) - csc
 end
 
 """
-$(SIGNATURES)
-
-Subtract  [`ExtendableSparseMatrix`](@ref)  ext from  SparseMatrixCSC.
+$(TYPEDSIGNATURES)
 """
 function Base.:-(csc::SparseMatrixCSC, ext::AbstractExtendableSparseMatrixCSC)
     return csc - sparse(ext)
 end
 
-"""
-$(SIGNATURES)
-"""
-function SparseArrays.dropzeros!(ext::AbstractExtendableSparseMatrixCSC)
-    return dropzeros!(sparse(ext))
-end
 
-
+"""
+$(TYPEDSIGNATURES)
+"""
 function mark_dirichlet(A::AbstractExtendableSparseMatrixCSC; penalty = 1.0e20)
     return mark_dirichlet(sparse(A); penalty)
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function eliminate_dirichlet(A::T, dirichlet) where {T <: AbstractExtendableSparseMatrixCSC}
     return T(eliminate_dirichlet(sparse(A), dirichlet))
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function eliminate_dirichlet!(A::AbstractExtendableSparseMatrixCSC, dirichlet)
     eliminate_dirichlet!(sparse(A), dirichlet)
     return A

@@ -2,9 +2,11 @@ module test_assembly
 using Test
 using SparseArrays
 using ExtendableSparse
+using ExtendableSparse: GenericExtendableSparseMatrixCSC
+using ExtendableSparse: SparseMatrixLNK, SparseMatrixDILNKC, SparseMatrixDict
 
-function test(; m = 1000, n = 1000, xnnz = 5000, nsplice = 1)
-    A = ExtendableSparseMatrix{Float64, Int64}(m, n)
+function test(Tm; m = 1000, n = 1000, xnnz = 5000, nsplice = 1)
+    A = GenericExtendableSparseMatrixCSC{Tm}{Float64, Int64}(m, n)
     m, n = size(A)
     S = spzeros(m, n)
     for isplice in 1:nsplice
@@ -33,24 +35,28 @@ function test(; m = 1000, n = 1000, xnnz = 5000, nsplice = 1)
     end
     return true
 end
+for Tm in [SparseMatrixLNK, SparseMatrixDict, SparseMatrixDILNKC]
+    @show Tm
+    @test test(Tm; m = 10, n = 10, xnnz = 5)
+    @test test(Tm; m = 100, n = 100, xnnz = 500, nsplice = 2)
+    @test test(Tm; m = 1000, n = 1000, xnnz = 5000, nsplice = 3)
 
-@test test(m = 10, n = 10, xnnz = 5)
-@test test(m = 100, n = 100, xnnz = 500, nsplice = 2)
-@test test(m = 1000, n = 1000, xnnz = 5000, nsplice = 3)
+    @test test(Tm; m = 20, n = 10, xnnz = 5)
+    @test test(Tm; m = 200, n = 100, xnnz = 500, nsplice = 2)
+    @test test(Tm; m = 2000, n = 1000, xnnz = 5000, nsplice = 3)
 
-@test test(m = 20, n = 10, xnnz = 5)
-@test test(m = 200, n = 100, xnnz = 500, nsplice = 2)
-@test test(m = 2000, n = 1000, xnnz = 5000, nsplice = 3)
+    @test test(Tm; m = 10, n = 20, xnnz = 5)
+    @test test(Tm; m = 100, n = 200, xnnz = 500, nsplice = 2)
+    @test test(Tm; m = 1000, n = 2000, xnnz = 5000, nsplice = 3)
 
-@test test(m = 10, n = 20, xnnz = 5)
-@test test(m = 100, n = 200, xnnz = 500, nsplice = 2)
-@test test(m = 1000, n = 2000, xnnz = 5000, nsplice = 3)
+    for irun in 1:10
+        m = rand((1:10000))
+        n = rand((1:10000))
+        nnz = rand((1:10000))
+        nsplice = rand((1:5))
+        @test test(Tm; m = m, n = n, xnnz = nnz, nsplice = nsplice)
+    end
 
-for irun in 1:10
-    m = rand((1:10000))
-    n = rand((1:10000))
-    nnz = rand((1:10000))
-    nsplice = rand((1:5))
-    @test test(m = m, n = n, xnnz = nnz, nsplice = nsplice)
 end
+
 end
