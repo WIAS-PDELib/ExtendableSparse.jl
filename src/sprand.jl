@@ -69,10 +69,9 @@ function fdrand!(
         error("Matrix size mismatch")
     end
 
-    _flush!(m::ExtendableSparseMatrix) = flush!(m)
+    _flush!(m::AbstractExtendableSparseMatrixCSC) = flush!(m)
     _flush!(m::SparseMatrixCSC) = m
-    _flush!(m::SparseMatrixLNK) = m
-    _flush!(m::AbstractMatrix) = m
+    _flush!(m::AbstractSparseMatrixExtension) = m
 
     _nonzeros(m::Matrix) = vec(m)
     _nonzeros(m::ExtendableSparseMatrix) = nonzeros(m)
@@ -82,8 +81,8 @@ function fdrand!(
 
     zero!(A::AbstractMatrix{T}) where {T} = A .= zero(T)
     zero!(A::SparseMatrixCSC{T, Ti}) where {T, Ti} = _nonzeros(A) .= zero(T)
-    zero!(A::ExtendableSparseMatrix{T, Ti}) where {T, Ti} = _nonzeros(A) .= zero(T)
-    zero!(A::SparseMatrixLNK{T, Ti}) where {T, Ti} = _nonzeros(A) .= zero(T)
+    zero!(A::AbstractExtendableSparseMatrixCSC) = reset!(A)
+    zero!(A::AbstractSparseMatrixExtension) = nothing
 
     zero!(A)
 
@@ -237,17 +236,14 @@ function fdrand(
         symmetric = true
     ) where {T}
     N = nx * ny * nz
+
     if matrixtype == :COO
         A = fdrand_coo(T, nx, ny, nz; rand = rand)
     else
-        if matrixtype == ExtendableSparseMatrix
-            A = ExtendableSparseMatrix(T, N, N)
-        elseif matrixtype == STExtendableSparseMatrixCSC
-            A = STExtendableSparseMatrixCSC(T, N, N)
-        elseif matrixtype == SparseMatrixDILNKC
-            A = SparseMatrixDILNKC(T, N, N)
-        elseif matrixtype == SparseMatrixLNK
-            A = SparseMatrixLNK(T, N, N)
+        if matrixtype <: AbstractExtendableSparseMatrixCSC
+            A = matrixtype(T, N, N)
+        elseif matrixtype <: AbstractSparseMatrixExtension
+            A = matrixtype(T, N, N)
         elseif matrixtype == SparseMatrixCSC
             A = spzeros(T, N, N)
         elseif matrixtype == Tridiagonal

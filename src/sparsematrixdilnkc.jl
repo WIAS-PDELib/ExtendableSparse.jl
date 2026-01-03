@@ -477,7 +477,7 @@ function Base.copy(S::SparseMatrixDILNKC)
         S.nentries,
         copy(S.colptr),
         copy(S.colstart),
-        copy(S.rowvals),
+        copy(S.rowval),
         copy(S.nzval)
     )
 end

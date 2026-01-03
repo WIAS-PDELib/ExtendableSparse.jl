@@ -1,14 +1,16 @@
 module test_updates
 using Test
 using ExtendableSparse
+using ExtendableSparse: GenericExtendableSparseMatrixCSC
+using ExtendableSparse: SparseMatrixLNK, SparseMatrixDILNKC, SparseMatrixDict
 using SparseArrays
 using Random
 using MultiFloats
 using ForwardDiff
 const Dual64 = ForwardDiff.Dual{Float64, Float64, 1}
 
-function test(T)
-    A = ExtendableSparseMatrix(T, 10, 10)
+function test(Tm, T)
+    A = GenericExtendableSparseMatrixCSC{Tm}(T, 10, 10)
     @test nnz(A) == 0
     A[1, 3] = 5
     updateindex!(A, +, 6.0, 4, 5)
@@ -24,7 +26,9 @@ function test(T)
     return @test nnz(A) == 3
 end
 
-test(Float64)
-test(Float64x2)
-test(Dual64)
+for Tm in [SparseMatrixLNK, SparseMatrixDict, SparseMatrixDILNKC]
+    test(Tm, Float64)
+    test(Tm, Float64x2)
+    test(Tm, Dual64)
+end
 end

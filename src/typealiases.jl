@@ -17,7 +17,7 @@ Aliased to [`GenericExtendableSparseMatricCSC`](@ref) with [`SparseMatrixLNK`](@
 """
 const STExtendableSparseMatrixCSC{Tv, Ti} = GenericExtendableSparseMatrixCSC{SparseMatrixLNK{Tv, Ti}, Tv, Ti}
 STExtendableSparseMatrixCSC(::Type{Tv}, m::Number, n::Number) where {Tv} = STExtendableSparseMatrixCSC{Tv, Int64}(m, n)
-STExtendableSparseMatrixCSC(m::Number, n::Number) = STExtendableSparseMatrixCSC{Float64, Int64}(m, n)
+STExtendableSparseMatrixCSC(m::Number, n::Number) = STExtendableSparseMatrixCSC(Float64, m, n)
 function STExtendableSparseMatrixCSC(A::AbstractSparseMatrixCSC{Tv, Ti}) where {Tv, Ti <: Integer}
     return GenericExtendableSparseMatrixCSC(
         SparseMatrixCSC(A),

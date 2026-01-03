@@ -15,6 +15,12 @@ mutable struct GenericExtendableSparseMatrixCSC{Tm <: AbstractSparseMatrixExtens
     xmatrix::Tm
 end
 
+function GenericExtendableSparseMatrixCSC{Tm}(::Type{Tv}, m::Integer, n::Integer) where {Tm <: AbstractSparseMatrixExtension, Tv}
+    return GenericExtendableSparseMatrixCSC(
+        spzeros(Tv, Int, m, n),
+        Tm{Tv, Int}(m, n)
+    )
+end
 
 function GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}(m::Integer, n::Integer) where {Tm <: AbstractSparseMatrixExtension, Tv, Ti <: Integer}
     return GenericExtendableSparseMatrixCSC(
@@ -24,7 +30,7 @@ function GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}(m::Integer, n::Integer) wh
 end
 
 function GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}(A::SparseMatrixCSC{Tv, Ti}) where {Tm <: AbstractSparseMatrixExtension, Tv, Ti <: Integer}
-    return GenericExtendableSparseMatrixCSC(
+    return GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}(
         SparseMatrixCSC(A),
         Tm(size(A)...)
     )
@@ -34,14 +40,14 @@ end
     $(TYPEDSIGNATURES)
 """
 function Base.similar(m::GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}) where {Tm, Tv, Ti}
-    return ExtendableSparseMatrixCSC{Tv, Ti}(size(m)...)
+    return GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}(size(m)...)
 end
 
 """
     $(TYPEDSIGNATURES)
 """
 function Base.similar(m::GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}, ::Type{T}) where {Tm, Tv, Ti, T}
-    return ExtendableSparseMatrixCSC{T, Ti}(size(m)...)
+    return GenericExtendableSparseMatrixCSC{Tm, T, Ti}(size(m)...)
 end
 
 

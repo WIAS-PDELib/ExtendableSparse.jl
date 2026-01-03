@@ -7,6 +7,15 @@ using Printf
 using BenchmarkTools
 using MultiFloats
 using ForwardDiff
+using Random
+
+function Random.rand(
+        rng::AbstractRNG,
+        ::Random.SamplerType{ForwardDiff.Dual{T, V, N}}
+    ) where {T, V, N}
+    return ForwardDiff.Dual{T, V, N}(rand(rng, T))
+end
+
 
 @testset "ExplicitImports" begin
     @test ExplicitImports.check_no_implicit_imports(ExtendableSparse) === nothing
@@ -86,6 +95,6 @@ end
     include("test_symmetric.jl")
 end
 
-@testset "block" begin
+@testset "Block" begin
     include("test_block.jl")
 end

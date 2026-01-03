@@ -10,6 +10,43 @@ mutable struct SparseMatrixDict{Tv, Ti} <: AbstractSparseMatrixExtension{Tv, Ti}
     SparseMatrixDict{Tv, Ti}(m, n) where {Tv, Ti} = new(m, n, Dict{Pair{Ti, Ti}, Tv}())
 end
 
+"""
+    $(TYPEDSIGNATURES)
+"""
+function SparseMatrixDict(Acsc::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti}
+    A = SparseMatrixDict{Tv, Ti}(size(Acsc)...)
+    rows = rowvals(Acsc)
+    vals = nonzeros(Acsc)
+    m, n = size(Acsc)
+    for j in 1:n
+        for k in nzrange(Acsc, j)
+            A[rows[k], j] = vals[k]
+        end
+    end
+    return A
+end
+
+"""
+    $(TYPEDSIGNATURES)
+"""
+function SparseMatrixDict(
+        valuetype::Type{Tv}, indextype::Type{Ti}, m,
+        n
+    ) where {Tv, Ti <: Integer}
+    return SparseMatrixDict{Tv, Ti}(m, n)
+end
+
+
+"""
+    $(TYPEDSIGNATURES)
+"""
+SparseMatrixDict(valuetype::Type{Tv}, m, n) where {Tv} = SparseMatrixDict(Tv, Int, m, n)
+
+
+"""
+    $(TYPEDSIGNATURES)
+"""
+SparseMatrixDict(m, n) = SparseMatrixDict(Float64, m, n)
 
 """
     $(TYPEDSIGNATURES)
@@ -31,6 +68,19 @@ end
 function rawupdateindex!(m::SparseMatrixDict{Tv, Ti}, op, v, i, j) where {Tv, Ti}
     p = Pair(i, j)
     return m.values[p] = op(get(m.values, p, zero(Tv)), v)
+end
+
+
+"""
+    $(TYPEDSIGNATURES)
+"""
+function updateindex!(m::SparseMatrixDict{Tv, Ti}, op, v, i, j) where {Tv, Ti}
+    p = Pair(i, j)
+    v1 = op(get(m.values, p, zero(Tv)), v)
+    if !iszero(v1)
+        m.values[p] = v1
+    end
+    return v1
 end
 
 """
@@ -80,14 +130,15 @@ function Base.:+(dictmatrix::SparseMatrixDict{Tv, Ti}, cscmatrix::SparseMatrixCS
     if lnew > 0
         (; colptr, nzval, rowval, m, n) = cscmatrix
         l = lnew + nnz(cscmatrix)
+
         I = Vector{Ti}(undef, l)
         J = Vector{Ti}(undef, l)
         V = Vector{Tv}(undef, l)
         i = 1
         for icsc in 1:(length(colptr) - 1)
             for j in colptr[icsc]:(colptr[icsc + 1] - 1)
-                I[i] = icsc
-                J[i] = rowval[j]
+                I[i] = rowval[j]
+                J[i] = icsc
                 V[i] = nzval[j]
                 i = i + 1
             end
@@ -99,6 +150,8 @@ function Base.:+(dictmatrix::SparseMatrixDict{Tv, Ti}, cscmatrix::SparseMatrixCS
             V[i] = v
             i = i + 1
         end
+
+        @assert l == i - 1
         @static if VERSION >= v"1.10"
             return SparseArrays.sparse!(I, J, V, m, n, +)
         else

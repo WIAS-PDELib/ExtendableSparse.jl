@@ -269,15 +269,6 @@ Return number of nonzero entries.
 """
 SparseArrays.nnz(lnk::SparseMatrixLNK) = lnk.nnz
 
-"""
-$(TYPEDSIGNATURES)
-
-Dummy flush! method for SparseMatrixLNK. Just
-used in test methods
-"""
-function flush!(lnk::SparseMatrixLNK{Tv, Ti}) where {Tv, Ti}
-    return lnk
-end
 
 # Struct holding pair of value and row
 # number, for sorting
