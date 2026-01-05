@@ -405,8 +405,8 @@ function Base.copy(S::SparseMatrixLNK)
         size(S, 2),
         S.nnz,
         S.nentries,
-        S.colptr,
-        S.rowval,
-        S.nzval
+        copy(S.colptr),
+        copy(S.rowval),
+        copy(S.nzval)
     )
 end
