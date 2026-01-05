@@ -184,7 +184,7 @@ end
 
 
 # Needed in 1.9
-function Base.:*(ext::GenericMTExtendableSparseMatrixCSC{Tm, TA} where {Tm <: ExtendableSparse.AbstractSparseMatrixExtension}, x::Union{StridedVector, BitVector}) where {TA}
+function Base.:*(ext::GenericMTExtendableSparseMatrixCSC{Tm, TA} where {Tm <: AbstractSparseMatrixExtension}, x::Union{StridedVector, BitVector}) where {TA}
     return mul!(similar(x), ext, x)
 end
 
@@ -213,12 +213,12 @@ function LinearAlgebra.mul!(r::AbstractVecOrMat, ext::GenericMTExtendableSparseM
 end
 
 # to resolve ambiguity
-function LinearAlgebra.mul!(::SparseArrays.AbstractSparseMatrixCSC, ::ExtendableSparse.GenericMTExtendableSparseMatrixCSC, ::LinearAlgebra.Diagonal)
+function LinearAlgebra.mul!(::SparseArrays.AbstractSparseMatrixCSC, ::GenericMTExtendableSparseMatrixCSC, ::LinearAlgebra.Diagonal)
     throw(MethodError("mul!(::AbstractSparseMatrixCSC, ::GenericMTExtendableSparseMatrixCSC,::Diagonal) is impossible"))
     return nothing
 end
 
-function LinearAlgebra.mul!(::AbstractMatrix, ::ExtendableSparse.GenericMTExtendableSparseMatrixCSC, ::LinearAlgebra.AbstractTriangular)
+function LinearAlgebra.mul!(::AbstractMatrix, ::GenericMTExtendableSparseMatrixCSC, ::LinearAlgebra.AbstractTriangular)
     throw(MethodError("mul!(::AbstractMatrix, ::GenericMTExtendableSparseMatrixCSC, ::AbstractTriangular) is impossible"))
     return nothing
 end

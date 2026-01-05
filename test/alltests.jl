@@ -2,6 +2,7 @@ using Aqua, ExplicitImports
 
 using LinearAlgebra
 using SparseArrays
+using SparseArrays: AbstractSparseMatrixCSC, getcolptr
 using ExtendableSparse
 using Printf
 using BenchmarkTools
@@ -19,7 +20,15 @@ end
 
 @testset "ExplicitImports" begin
     @test ExplicitImports.check_no_implicit_imports(ExtendableSparse) === nothing
+    @test ExplicitImports.check_all_explicit_imports_via_owners(ExtendableSparse) === nothing
+    @test ExplicitImports.check_all_explicit_imports_are_public(ExtendableSparse, ignore = (:AbstractSparseMatrixCSC, :getcolptr)) === nothing
     @test ExplicitImports.check_no_stale_explicit_imports(ExtendableSparse) === nothing
+    @test ExplicitImports.check_all_qualified_accesses_via_owners(ExtendableSparse) === nothing
+    @test ExplicitImports.check_all_qualified_accesses_are_public(
+        ExtendableSparse,
+        ignore = (:AbstractSparseMatrixCSC, :getcolptr, :Forward, :USE_GPL_LIBS, :_checkbuffers, :print_array, :sparse!)
+    ) === nothing
+    @test ExplicitImports.check_no_self_qualified_accesses(ExtendableSparse) === nothing
 end
 
 @testset "Aqua" begin
