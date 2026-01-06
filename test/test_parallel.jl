@@ -1,6 +1,7 @@
 module test_parallel
 
 using ExtendableSparse, SparseArrays
+using ExtendableSparse: partitioning!
 # using ExtendableSparse.Experimental
 using BenchmarkTools
 using ExtendableGrids

@@ -1,22 +1,18 @@
 module test_copymethods
 using Test
 using ExtendableSparse
+using ExtendableSparse: GenericExtendableSparseMatrixCSC
+using ExtendableSparse: SparseMatrixLNK, SparseMatrixDILNKC, SparseMatrixDict
 using SparseArrays
 using Random
 using MultiFloats
 using ForwardDiff
 
 const Dual64 = ForwardDiff.Dual{Float64, Float64, 1}
-function Random.rand(
-        rng::AbstractRNG,
-        ::Random.SamplerType{ForwardDiff.Dual{T, V, N}}
-    ) where {T, V, N}
-    return ForwardDiff.Dual{T, V, N}(rand(rng, T))
-end
 
-function test(T)
+function test(Tm, T)
     Xcsc = sprand(T, 10_000, 10_000, 0.01)
-    Xlnk = SparseMatrixLNK(Xcsc)
+    Xlnk = Tm(Xcsc)
     Xext = ExtendableSparseMatrix(Xcsc)
     t0 = @elapsed copy(Xcsc)
     t1 = @elapsed copy(Xlnk)
@@ -30,7 +26,9 @@ function test(T)
     end
     return true
 end
-test(Float64)
-test(Float64x2)
-test(Dual64)
+for Tm in [SparseMatrixLNK, SparseMatrixDict, SparseMatrixDILNKC]
+    @test test(Tm, Float64)
+    @test test(Tm, Float64x2)
+    @test test(Tm, Dual64)
+end
 end

@@ -2,21 +2,17 @@ module test_constructors
 using Test
 using LinearAlgebra
 using ExtendableSparse
+using ExtendableSparse: GenericExtendableSparseMatrixCSC
+using ExtendableSparse: SparseMatrixLNK, SparseMatrixDILNKC, SparseMatrixDict
 using SparseArrays
 using Random
 using MultiFloats
 using ForwardDiff
 
 const Dual64 = ForwardDiff.Dual{Float64, Float64, 1}
-function Random.rand(
-        rng::AbstractRNG,
-        ::Random.SamplerType{ForwardDiff.Dual{T, V, N}}
-    ) where {T, V, N}
-    return ForwardDiff.Dual{T, V, N}(rand(rng, T))
-end
 
-function test_construct(T)
-    m = ExtendableSparseMatrix(T, 10, 10)
+function test_construct(Text, T)
+    m = GenericExtendableSparseMatrixCSC{Text}(T, 10, 10)
     return eltype(m) == T
 end
 
@@ -25,20 +21,25 @@ function test_sprand(T)
     return eltype(m) == T
 end
 
-function test_transient_construction(; m = 10, n = 10, d = 0.1)
+function test_transient_construction(Text; m = 10, n = 10, d = 0.1)
     csc = sprand(m, n, d)
-    lnk = SparseMatrixLNK(csc)
+    lnk = Text(csc)
     csc2 = SparseMatrixCSC(lnk)
     return csc2 == csc
 end
 
 function test()
+    exttypes = [SparseMatrixLNK, SparseMatrixDict, SparseMatrixDILNKC]
+
     m1 = ExtendableSparseMatrix(10, 10)
     @test eltype(m1) == Float64
-    @test test_construct(Float16)
-    @test test_construct(Float32)
-    @test test_construct(Float64x2)
-    @test test_construct(Dual64)
+
+    for T in exttypes
+        @test test_construct(T, Float16)
+        @test test_construct(T, Float32)
+        @test test_construct(T, Float64x2)
+        @test test_construct(T, Dual64)
+    end
 
     acsc = sprand(10, 10, 0.5)
     @test sparse(ExtendableSparseMatrix(acsc)) == acsc
@@ -58,11 +59,13 @@ function test()
     @test test_sprand(Float64x2)
     @test test_sprand(Dual64)
 
-    for irun in 1:10
-        m = rand((1:1000))
-        n = rand((1:1000))
-        d = 0.3 * rand()
-        @test test_transient_construction(m = m, n = n, d = d)
+    for T in exttypes
+        for irun in 1:10
+            m = rand((1:1000))
+            n = rand((1:1000))
+            d = 0.3 * rand()
+            @test test_transient_construction(T; m = m, n = n, d = d)
+        end
     end
     return
 end

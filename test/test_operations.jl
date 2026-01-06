@@ -3,6 +3,7 @@ using Test
 using SparseArrays
 using LinearAlgebra
 using ExtendableSparse
+using ExtendableSparse: sprand_sdd!, SparseMatrixLNK
 
 #####################################################################
 function test_addition(; m = 10, n = 10, d = 0.1)

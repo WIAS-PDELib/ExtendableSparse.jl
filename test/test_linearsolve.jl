@@ -10,7 +10,6 @@ using MultiFloats
 
 using AMGCLWrap
 using ILUZero, IncompleteLU, AlgebraicMultigrid
-import Pardiso
 
 f64(x::ForwardDiff.Dual{T}) where {T} = Float64(ForwardDiff.value(x))
 f64(x::Number) = Float64(x)
@@ -62,9 +61,6 @@ factorizations = [
     KLUFactorization(reuse_symbolic = false),
 ]
 
-if !Sys.isapple()
-    push!(factorizations, MKLPardisoFactorize())
-end
 
 @testset "Factorizations" begin
 
@@ -87,9 +83,9 @@ allprecs = [
     ExtendableSparse.ILUZeroPreconBuilder(),
     ExtendableSparse.ILUZeroPreconBuilder(; blocksize = 2),
     ExtendableSparse.ILUTPreconBuilder(),
-    ExtendableSparse.JacobiPreconBuilder(),
-    ExtendableSparse.SmoothedAggregationPreconBuilder(),
-    ExtendableSparse.RugeStubenPreconBuilder(),
+    #    ExtendableSparse.JacobiPreconBuilder(),
+    SmoothedAggregationPreconBuilder(),
+    RugeStubenPreconBuilder(),
 ]
 
 @testset "iterations" begin

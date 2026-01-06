@@ -1,6 +1,7 @@
 module test_block
 using Test
 using ExtendableSparse
+using ExtendableSparse: BlockPreconditioner, jacobi
 using ILUZero, AlgebraicMultigrid
 using IterativeSolvers
 using LinearAlgebra
@@ -19,32 +20,16 @@ function main(; n = 100)
 
     @test sol ≈ sol0
 
-    sol = cg(A, b, Pl = BlockPreconditioner(A; partitioning))
-    @test sol ≈ sol0
-
-
     sol = cg(A, b, Pl = BlockPreconditioner(A; partitioning, factorization = ilu0))
     @test sol ≈ sol0
 
-    sol = cg(A, b, Pl = BlockPreconditioner(A; partitioning, factorization = ILUZeroPreconditioner))
-    @test sol ≈ sol0
-
-    sol = cg(A, b, Pl = BlockPreconditioner(A; partitioning, factorization = ILU0Preconditioner))
-    @test sol ≈ sol0
-
-    sol = cg(A, b, Pl = BlockPreconditioner(A; partitioning, factorization = JacobiPreconditioner))
-    @test sol ≈ sol0
-
-
-    sol = cg(A, b, Pl = BlockPreconditioner(A; partitioning, factorization = AMGPreconditioner))
+    sol = cg(A, b, Pl = BlockPreconditioner(A; partitioning, factorization = jacobi))
     @test sol ≈ sol0
 
     sol = cg(A, b, Pl = BlockPreconditioner(A; partitioning, factorization = sparspaklu))
     @test sol ≈ sol0
 
-    sol = cg(A, b, Pl = BlockPreconditioner(A; partitioning, factorization = SparspakLU))
-    return @test sol ≈ sol0
-
+    return
 end
 
 main(n = 100)

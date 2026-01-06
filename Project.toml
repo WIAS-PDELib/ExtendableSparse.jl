@@ -1,32 +1,54 @@
 name = "ExtendableSparse"
 uuid = "95c220a8-a1cf-11e9-0c77-dbfce5f500b3"
+version = "2.0.0"
 authors = ["Juergen Fuhrmann <juergen.fuhrmann@wias-berlin.de>", "Daniel Runge"]
-version = "1.7.1"
 
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 ILUZero = "88f59080-6952-5380-9ea5-54057fb9a43f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+SciMLPublic = "431bcebd-1456-4ced-9d72-93c2757fff0b"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Sparspak = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
-SuiteSparse = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [weakdeps]
-AMGCLWrap = "4f76b812-4ba5-496d-b042-d70715554288"
-AlgebraicMultigrid = "2169fc97-5a83-5252-b627-83903c6c433c"
 IncompleteLU = "40713840-3770-5561-ab4c-a76e7d0d7895"
 LinearSolve = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
-Pardiso = "46dd5b70-b6fb-5a00-ae2d-e8fea33afaf2"
 
 [extensions]
-ExtendableSparseAMGCLWrapExt = "AMGCLWrap"
-ExtendableSparseAlgebraicMultigridExt = "AlgebraicMultigrid"
 ExtendableSparseIncompleteLUExt = "IncompleteLU"
-ExtendableSparsePardisoExt = "Pardiso"
 ExtendableSparseLinearSolveExt = "LinearSolve"
+
+[compat]
+AMGCLWrap = "2"
+AlgebraicMultigrid = "0.4, 0.5, 0.6, 1"
+Aqua = "0.8"
+BenchmarkTools = "1"
+ChunkSplitters = "2, 3"
+DocStringExtensions = "0.8, 0.9"
+ExplicitImports = "1"
+ExtendableGrids = "1.9"
+ForwardDiff = "0.10, 1"
+ILUZero = "0.2"
+IncompleteLU = "^0.2.1"
+InteractiveUtils = "1.11.0"
+IterativeSolvers = "0.9"
+LinearAlgebra = "1.9"
+LinearSolve = "2.36.0, 3.7.1"
+Metis = "1"
+MultiFloats = "1, 2"
+OhMyThreads = "0.6, 0.7, 0.8"
+Printf = "1.9"
+Random = "1.9"
+RecursiveFactorization = "0.2"
+SciMLPublic = "1.0.1"
+SparseArrays = "1.9"
+Sparspak = "0.3.6"
+StaticArrays = "1"
+Test = "1.9"
+julia = "1.9"
 
 [extras]
 AMGCLWrap = "4f76b812-4ba5-496d-b042-d70715554288"
@@ -38,48 +60,15 @@ ExplicitImports = "7d51a73a-1435-4ff3-83d9-f097790105c7"
 ExtendableGrids = "cfc395e8-590f-11e8-1f13-43a2532b2fa8"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 IncompleteLU = "40713840-3770-5561-ab4c-a76e7d0d7895"
+InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"
 LinearSolve = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
 Metis = "2679e427-3c69-5b7f-982b-ece356f1e94b"
 MultiFloats = "bdf0d083-296b-4888-a5b6-7498122e68a5"
 OhMyThreads = "67456a42-1dca-4109-a031-0a68de7e3ad5"
-Pardiso = "46dd5b70-b6fb-5a00-ae2d-e8fea33afaf2"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 RecursiveFactorization = "f2c3362d-daeb-58d1-803e-2bc74f2840b4"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
-[compat]
-AMGCLWrap = "2"
-AlgebraicMultigrid = "0.4, 0.5, 0.6, 1"
-DocStringExtensions = "0.8, 0.9"
-ExtendableGrids = "1.9"
-ILUZero = "0.2"
-IncompleteLU = "^0.2.1"
-IterativeSolvers = "0.9"
-LinearSolve = "2.36.0, 3.7.1"
-Pardiso = "0.5.1, 1"
-Sparspak = "0.3.6"
-StaticArrays = "1.5.24"
-julia = "1.9"
-
 [targets]
-test = [
-    "AMGCLWrap",
-    "AlgebraicMultigrid",
-    "Aqua",
-    "BenchmarkTools",
-    "ChunkSplitters",
-    "ExplicitImports",
-    "ExtendableGrids",
-    "ForwardDiff",
-    "IncompleteLU",
-    "IterativeSolvers",
-    "LinearSolve",
-    "Metis",
-    "MultiFloats", 
-    "OhMyThreads",
-    "Pardiso",
-    "Random",
-    "RecursiveFactorization",
-    "Test",
-]
+test = ["AMGCLWrap", "AlgebraicMultigrid", "Aqua", "BenchmarkTools", "ChunkSplitters", "ExplicitImports", "ExtendableGrids", "ForwardDiff", "IncompleteLU", "IterativeSolvers", "LinearSolve", "Metis", "MultiFloats", "OhMyThreads", "Random", "RecursiveFactorization", "Test"]
