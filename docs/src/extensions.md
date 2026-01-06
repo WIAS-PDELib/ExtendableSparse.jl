@@ -1,4 +1,4 @@
-#  Matrix extensions
+# Matrix extensions
 
 ## AbstractSparseMatrixExtension
 ```@docs

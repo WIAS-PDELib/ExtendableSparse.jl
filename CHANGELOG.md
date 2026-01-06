@@ -1,10 +1,10 @@
 # Changelog
 
-## [2.0.0] - Planned
+## [2.0.0] - 2026-01-06
 
 - Remove solver + precon API which is not based on precs or directly overloading `\`.
   Fully rely on LinearSolve (besides `\`)
-- Move AMGBuilder etc corresponding packages (depending on the PRs)
+- Move AMGBuilder etc to corresponding packages (depending on the PRs)
 - Keep ILUZeroPreconBuilder, JacobiPreconBuilder
 - ExtendableSparseMatrix is now GenericExtendableSparseMatrix{SparseMatrixLNK}
 - Changes should be non-breaking if only ExtendableSparseMatrix was used, and no solvers or preconditioners
