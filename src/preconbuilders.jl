@@ -294,3 +294,131 @@ LinearAlgebra.ldiv!(fact::JacobiPreconditioner, v) = ldiv!(fact.factorization, v
 
 allow_views(::JacobiPreconditioner) = true
 allow_views(::Type{JacobiPreconditioner}) = true
+
+
+"""
+    SchurComplementPreconditioner{AT, ST}
+
+Preconditioner for saddle-point problems of the form:
+```
+[ A  B ]
+[ Bᵀ 0 ]
+```
+
+# Fields
+- `partitions`: Vector of two ranges defining matrix partitioning
+- `A_fac::AT`: Factorization of the A-block (top-left)
+- `S_fac::ST`: Factorization of the Schur complement (approximation of -BᵀA⁻¹B)
+"""
+struct SchurComplementPreconditioner{AT, ST}
+    partitions
+    A_fac::AT
+    S_fac::ST
+end
+
+"""
+    SchurComplementPreconditioner(M::AbstractMatrix, partitions::Vector, A_factorization; S_factorization = lu, S_factor = 1.0, verbosity = 0)
+
+Given a saddle point block matrix
+```
+M = [ A  B ]
+    [ Bᵀ 0 ]
+```
+we generate a preconditioner of the form
+```
+[ ≈ A     0 ]
+[   0   ≈ S ]
+
+```
+where `S = -α BᵀA⁻¹B` is the Schur complement and α is 1 by default (can be adjusted by `S_factor`).
+In the Schur complement, we use `Diagonal(A)` for efficiency.
+
+# Arguments
+- `M`: Matrix to be approximated
+- `partitions`: vector of two index partitions for the `A`` block and the `S`` block
+- `A_factorization`: Factorization method for the A-block (e.g., `ilu0, Diagonal, lu`)
+- `S_factorization`: Factorization method for the Schur complement (defaults to full `lu`)
+- `S_factor`: An additional scalar factor for the Schur complement block. Can be used to obtain positive definite preconditioners
+
+Note: All factorizations need to be able for operate on vector views.
+"""
+function SchurComplementPreconditioner(M::AbstractMatrix; partitions::Vector, A_factorization, S_factorization = lu, S_factor = 1.0, verbosity = 0)
+
+    (part1, part2) = partitions
+
+    # I see no other way than creating this expensive copy
+    A = M[part1, part1]
+    B = M[part1, part2]
+
+    # first factorization
+    A_fac = A_factorization(A)
+
+    verbosity > 0 && @info "SchurComplementPreconBuilder: A ($n1×$n1) is factorized"
+
+    # compute the Schur Matrix
+    # S ≈ -α BᵀA⁻¹B
+    # we use the diagonal of A: this is _very_ performant and creates a sparse result
+    S = -S_factor * B' * (Diagonal(A) \ B)
+
+    verbosity > 0 && @info "SchurComplementPreconBuilder: S ($n2×$n2) is computed"
+
+    # factorize S
+    S_fac = S_factorization(S)
+
+    verbosity > 0 && @info "SchurComplementPreconBuilder: S ($n2×$n2) is factorized"
+
+    return SchurComplementPreconditioner(partitions, A_fac, S_fac)
+end
+
+
+"""
+    SchurComplementPreconBuilder(dofs_first_block, A_factorization, S_factorization = lu)
+
+Factory function creating a LinearSolve.jl compatible preconditioner for saddle-point problems.
+
+# Arguments
+- `dofs_first_block`: Number of degrees of freedom in the first block
+- `A_factorization`: Factorization method for the A-block (e.g., `ilu0, Diagonal, lu`)
+- `S_factorization`: Factorization method for the Schur complement (defaults to full `lu`)
+- `S_factor`: An additional scalar factor for the Schur complement block. Can be used to obtain positive definite preconditioners
+"""
+function SchurComplementPreconBuilder(dofs_first_block, A_factorization, S_factorization = lu; verbosity = 0, S_factor = 1.0)
+
+    # this is the resulting LinearSolve.jl compatible preconditioner
+    function prec(M, p)
+
+        part1 = 1:dofs_first_block
+        part2 = (dofs_first_block + 1):size(M, 2)
+
+        partitions = [part1, part2]
+
+        SCP = SchurComplementPreconditioner(M; partitions, A_factorization, S_factorization, S_factor, verbosity)
+
+        return (SCP, LinearAlgebra.I)
+    end
+
+    return prec
+end
+
+
+function LinearAlgebra.ldiv!(u, p::SchurComplementPreconditioner, v)
+
+    (part1, part2) = p.partitions
+    # do it in parallel
+    t1 = Threads.@spawn @views ldiv!(u[part1], p.A_fac, v[part1])
+    t2 = Threads.@spawn @views ldiv!(u[part2], p.S_fac, v[part2])
+    fetch.([t1, t2])
+
+    return u
+end
+
+function LinearAlgebra.ldiv!(p::SchurComplementPreconditioner, v)
+
+    (part1, part2) = p.partitions
+    # do it in parallel
+    t1 = Threads.@spawn @views ldiv!(p.A_fac, v[part1])
+    t2 = Threads.@spawn @views ldiv!(p.S_fac, v[part2])
+    fetch.([t1, t2])
+
+    return v
+end
