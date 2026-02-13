@@ -7,7 +7,7 @@ module ExtendableSparse
 
 using DocStringExtensions: DocStringExtensions, SIGNATURES, TYPEDEF, TYPEDFIELDS, TYPEDSIGNATURES
 using ILUZero: ILUZero
-using LinearAlgebra: LinearAlgebra, Diagonal, Hermitian, Symmetric, Tridiagonal, convert, mul!, ldiv!
+using LinearAlgebra: LinearAlgebra, Diagonal, Hermitian, Symmetric, Tridiagonal, convert, mul!, ldiv!, lu
 using SparseArrays: SparseArrays, AbstractSparseMatrix, AbstractSparseMatrixCSC, SparseMatrixCSC
 using SparseArrays: dropzeros!, findnz, nzrange, sparse, spzeros, rowvals, getcolptr, nonzeros, nnz
 using Sparspak: sparspaklu

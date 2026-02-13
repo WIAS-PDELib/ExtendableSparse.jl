@@ -1,12 +1,13 @@
 module test_block
-using Test
+using AMGCLWrap
 using ExtendableSparse
-using ExtendableSparse: BlockPreconditioner, jacobi
+using ExtendableSparse: BlockPreconditioner, jacobi, SchurComplementPreconBuilder
 using ILUZero, AlgebraicMultigrid
 using IterativeSolvers
 using LinearAlgebra
+using SparseArrays
 using Sparspak
-using AMGCLWrap
+using Test
 
 ExtendableSparse.allow_views(::typeof(ilu0)) = true
 
@@ -28,6 +29,19 @@ function main(; n = 100)
 
     sol = cg(A, b, Pl = BlockPreconditioner(A; partitioning, factorization = sparspaklu))
     @test sol ≈ sol0
+
+    # Schur complement: create a saddle point system
+    let
+        m = n ÷ 10
+        B = I[1:(n^2), 1:(m^2)]
+        M = [ A B; B' spzeros(m^2, m^2)]
+
+        sol1 = ones(n^2 + m^2)
+        c = M * sol1
+
+        sol = cg(M, c, Pl = SchurComplementPreconBuilder(n^2, lu)(M, nothing))
+        @test sol ≈ sol1
+    end
 
     return
 end

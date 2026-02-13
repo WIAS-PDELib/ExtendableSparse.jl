@@ -294,3 +294,97 @@ LinearAlgebra.ldiv!(fact::JacobiPreconditioner, v) = ldiv!(fact.factorization, v
 
 allow_views(::JacobiPreconditioner) = true
 allow_views(::Type{JacobiPreconditioner}) = true
+
+
+"""
+    SchurComplementPreconditioner{AT, ST}
+
+Preconditioner for saddle-point problems of the form:
+```
+[ A  B ]
+[ Bᵀ 0 ]
+```
+
+# Fields
+- `partitions`: Vector of two ranges defining matrix partitioning
+- `A_fac::AT`: Factorization of the A-block (top-left)
+- `S_fac::ST`: Factorization of the Schur complement (approximation of -BᵀA⁻¹B)
+"""
+struct SchurComplementPreconditioner{AT, ST}
+    partitions
+    A_fac::AT
+    S_fac::ST
+end
+
+
+"""
+    SchurComplementPreconBuilder(dofs_first_block, A_factorization, S_factorization = lu)
+
+Factory function creating preconditioners for saddle-point problems.
+
+# Arguments
+- `dofs_first_block`: Number of degrees of freedom in the first block (size of A matrix)
+- `A_factorization`: Factorization method for the A-block (e.g., `ilu0, Diagonal, lu`)
+- `S_factorization`: Factorization method for the Schur complement (defaults to `lu`)
+
+Returns a function `prec(M, p)` that creates a `SchurComplementPreconditioner`.
+"""
+function SchurComplementPreconBuilder(dofs_first_block, A_factorization, S_factorization = lu)
+
+    # this is the resulting preconditioner
+    function prec(M, p)
+
+        # We have
+        # M = [ A  B ] → n1 dofs
+        #     [ Bᵀ 0 ] → n2 dofs
+
+        n1 = dofs_first_block
+        n2 = size(M, 1) - n1
+
+        # I see no other way than creating this expensive copy
+        A = M[1:n1, 1:n1]
+        B = M[1:n1, (n1 + 1):end]
+
+        # first factorization
+        A_fac = A_factorization(A)
+
+        # compute the (dense!) Schur Matrix
+        # S ≈ - Bᵀ A⁻¹ B
+        S = zeros(n2, n2)
+
+        @info "Computing the Schur complement..."
+        ldiv_buffer = zeros(n1)
+        for col in 1:n2
+            # TODO: the following is not thread parallel?
+            @views ldiv!(ldiv_buffer, A_fac, B[:, col])
+            @views mul!(S[:, col], B', ldiv_buffer)
+        end
+        S .*= -1.0
+        @info "...done"
+
+        S_fac = S_factorization(sparse(S))
+
+        return SchurComplementPreconditioner([1:n1, (n1 + 1):(n1 + n2)], A_fac, S_fac)
+    end
+
+    return prec
+end
+
+
+function LinearAlgebra.ldiv!(u, p::SchurComplementPreconditioner, v)
+
+    (part1, part2) = p.partitions
+    @views ldiv!(u[part1], p.A_fac, v[part1])
+    @views ldiv!(u[part2], p.S_fac, v[part2])
+
+    return u
+end
+
+function LinearAlgebra.ldiv!(p::SchurComplementPreconditioner, v)
+
+    (part1, part2) = p.partitions
+    @views ldiv!(p.A_fac, v[part1])
+    @views ldiv!(p.S_fac, v[part2])
+
+    return v
+end
