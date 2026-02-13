@@ -42,7 +42,7 @@ export eliminate_dirichlet, eliminate_dirichlet!, mark_dirichlet
 
 
 include("preconbuilders.jl")
-export LinearSolvePreconBuilder, BlockPreconBuilder, JacobiPreconBuilder
+export LinearSolvePreconBuilder, BlockPreconBuilder, JacobiPreconBuilder, SchurComplementPreconBuilder
 @public ILUZeroPreconBuilder, ILUTPreconBuilder
 
 
