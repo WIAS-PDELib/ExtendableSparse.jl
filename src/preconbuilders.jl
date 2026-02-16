@@ -348,21 +348,42 @@ function SchurComplementPreconBuilder(dofs_first_block, A_factorization, S_facto
         # first factorization
         A_fac = A_factorization(A)
 
-        # compute the (dense!) Schur Matrix
+        # compute the (dense!) Schur Matrix in parallel
         # S ≈ - Bᵀ A⁻¹ B
+
+        function col_loop(col_chunk)
+
+            # sigh, some factorizations (like ilu0) store internal buffers. Hence, every thread needs a copy.
+            local A_fac_copy = deepcopy(A_fac)
+
+            # local buffers and result
+            local S_chunk = zeros(n2, length(col_chunk))
+            local ldiv_buffer = zeros(n1)
+
+            for (icol, col) in enumerate(col_chunk)
+                @views ldiv!(ldiv_buffer, A_fac_copy, B[:, col])
+                @views mul!(S_chunk[:, icol], B', ldiv_buffer)
+            end
+            S_chunk .*= -1.0
+
+            return S_chunk
+        end
+
+        # split columns into chunks and assemble S
+        col_chunks = chunks(1:n2, n = Threads.nthreads())
+        tasks = map(col_chunks) do col_chunk
+            Threads.@spawn col_loop(col_chunk)
+        end
+        S_chunks = fetch.(tasks)
+
         S = zeros(n2, n2)
 
-        @info "Computing the Schur complement..."
-        ldiv_buffer = zeros(n1)
-        for col in 1:n2
-            # TODO: the following is not thread parallel?
-            @views ldiv!(ldiv_buffer, A_fac, B[:, col])
-            @views mul!(S[:, col], B', ldiv_buffer)
+        for (col_chunk, S_chunk) in zip(col_chunks, S_chunks)
+            S[:, col_chunk] .= S_chunk
         end
-        S .*= -1.0
-        @info "...done"
 
-        S_fac = S_factorization(sparse(S))
+        # factorize S
+        S_fac = S_factorization(S)
 
         return SchurComplementPreconditioner([1:n1, (n1 + 1):(n1 + n2)], A_fac, S_fac)
     end
