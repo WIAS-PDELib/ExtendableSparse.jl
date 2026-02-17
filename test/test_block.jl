@@ -39,7 +39,7 @@ function main(; n = 100)
         sol1 = ones(n^2 + m^2)
         c = M * sol1
 
-        sol = cg(M, c, Pl = SchurComplementPreconBuilder(n^2, lu)(M, nothing))
+        sol = cg(M, c, Pl = SchurComplementPreconBuilder(n^2, lu)(M))
         @test sol ≈ sol1
     end
 

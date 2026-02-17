@@ -332,7 +332,7 @@ Returns a function `prec(M, p)` that creates a `SchurComplementPreconditioner`.
 function SchurComplementPreconBuilder(dofs_first_block, A_factorization, S_factorization = lu)
 
     # this is the resulting preconditioner
-    function prec(M, p)
+    function prec(M)
 
         # We have
         # M = [ A  B ] → n1 dofs
@@ -348,39 +348,10 @@ function SchurComplementPreconBuilder(dofs_first_block, A_factorization, S_facto
         # first factorization
         A_fac = A_factorization(A)
 
-        # compute the (dense!) Schur Matrix in parallel
-        # S ≈ - Bᵀ A⁻¹ B
-
-        function col_loop(col_chunk)
-
-            # sigh, some factorizations (like ilu0) store internal buffers. Hence, every thread needs a copy.
-            local A_fac_copy = deepcopy(A_fac)
-
-            # local buffers and result
-            local S_chunk = zeros(n2, length(col_chunk))
-            local ldiv_buffer = zeros(n1)
-
-            for (icol, col) in enumerate(col_chunk)
-                @views ldiv!(ldiv_buffer, A_fac_copy, B[:, col])
-                @views mul!(S_chunk[:, icol], B', ldiv_buffer)
-            end
-            S_chunk .*= -1.0
-
-            return S_chunk
-        end
-
-        # split columns into chunks and assemble S
-        col_chunks = chunks(1:n2, n = Threads.nthreads())
-        tasks = map(col_chunks) do col_chunk
-            Threads.@spawn col_loop(col_chunk)
-        end
-        S_chunks = fetch.(tasks)
-
-        S = zeros(n2, n2)
-
-        for (col_chunk, S_chunk) in zip(col_chunks, S_chunks)
-            S[:, col_chunk] .= S_chunk
-        end
+        # compute the Schur Matrix
+        # S ≈ -BᵀA⁻¹B
+        # we use the diagonal of A: this is _very_ performant and creates a sparse result
+        S = - B' * (Diagonal(A) \ B)
 
         # factorize S
         S_fac = S_factorization(S)
