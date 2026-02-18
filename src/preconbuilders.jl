@@ -329,7 +329,7 @@ Factory function creating preconditioners for saddle-point problems.
 
 Returns a function `prec(M, p)` that creates a `SchurComplementPreconditioner`.
 """
-function SchurComplementPreconBuilder(dofs_first_block, A_factorization, S_factorization = lu)
+function SchurComplementPreconBuilder(dofs_first_block, A_factorization, S_factorization = lu; verbosity = 0)
 
     # this is the resulting preconditioner
     function prec(M)
@@ -348,13 +348,19 @@ function SchurComplementPreconBuilder(dofs_first_block, A_factorization, S_facto
         # first factorization
         A_fac = A_factorization(A)
 
+        verbosity > 0 && @info "SchurComplementPreconBuilder: A ($n1×$n1) is factorized"
+
         # compute the Schur Matrix
         # S ≈ -BᵀA⁻¹B
         # we use the diagonal of A: this is _very_ performant and creates a sparse result
         S = - B' * (Diagonal(A) \ B)
 
+        verbosity > 0 && @info "SchurComplementPreconBuilder: S ($n2×$n2) is computed"
+
         # factorize S
         S_fac = S_factorization(S)
+
+        verbosity > 0 && @info "SchurComplementPreconBuilder: S ($n2×$n2) is factorized"
 
         return SchurComplementPreconditioner([1:n1, (n1 + 1):(n1 + n2)], A_fac, S_fac)
     end
