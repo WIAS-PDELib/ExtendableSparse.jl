@@ -386,3 +386,159 @@ function LinearAlgebra.ldiv!(p::SchurComplementPreconditioner, v)
 
     return v
 end
+
+
+struct FullSchurComplementPreconditioner{AT, ST, BT}
+    partitions
+    A_fac::AT
+    S_fac::ST
+    B::BT
+    Av1_cache::Vector{Float64}
+    BSv2_cache::Vector{Float64}
+    BSBAv1_cache::Vector{Float64}
+    ABSBAv1_cache::Vector{Float64}
+    ABSv2_cache::Vector{Float64}
+    Sv2_cache::Vector{Float64}
+    BAv1_cache::Vector{Float64}
+    SBAv1_cache::Vector{Float64}
+end
+
+
+function FullSchurComplementPreconBuilder(dofs_first_block, A_factorization, S_factorization = lu; verbosity = 0)
+
+    # this is the resulting preconditioner
+    function prec(M)
+
+        # We have
+        # M = [ A  B ] → n1 dofs
+        #     [ Bᵀ 0 ] → n2 dofs
+
+        n1 = dofs_first_block
+        n2 = size(M, 1) - n1
+
+        # I see no other way than creating this expensive copy
+        A = M[1:n1, 1:n1]
+        B = M[1:n1, (n1 + 1):end]
+
+        # first factorization
+        A_fac = A_factorization(A)
+
+        verbosity > 0 && @info "SchurComplementPreconBuilder: A ($n1×$n1) is factorized"
+
+        # compute dense (!) the Schur Matrix
+        # S ≈ -BᵀA⁻¹B
+        # S = zeros(n2, n2)
+        # for col in 1:n2
+        #     @show col
+        #     @views S[:, col] = B' * (A_fac \ Vector(B[:, col]))
+        # end
+        # S .*= -1.0
+
+        # S = - B' * (Diagonal(A) \ B)
+
+        S = zeros(n2, n2)
+
+        function col_loop(col_chunk)
+            # sigh, some factorizations (like ilu0) store internal buffers. Hence, every thread needs a copy.
+            local A_fac_copy = deepcopy(A_fac)
+
+            # local buffers and result
+            local ldiv_buffer = zeros(n1)
+            local Bcol_buffer = zeros(n1)
+
+            for (icol, col) in enumerate(col_chunk)
+                @info "col $icol of $(length(col_chunk))"
+                Bcol = B[:, col] # B is very sparse: this copy is fine?
+                Bcol_buffer .= 0.0
+                Bcol_buffer[Bcol.nzind] = Bcol.nzval
+                @views ldiv!(ldiv_buffer, A_fac_copy, Bcol_buffer)
+                @views mul!(S[:, col], B', ldiv_buffer, -1.0, 0.0)
+            end
+            return nothing
+        end
+
+        # split columns into chunks and assemble S
+        col_chunks = chunks(1:n2, n = Threads.nthreads())
+        tasks = map(col_chunks) do col_chunk
+            @info "start thread"
+            Threads.@spawn col_loop(col_chunk)
+        end
+
+        # then S is ready
+        fetch.(tasks)
+
+        verbosity > 0 && @info "SchurComplementPreconBuilder: S ($n2×$n2) is computed"
+
+        # factorize S
+        S_fac = S_factorization(S)
+
+        verbosity > 0 && @info "SchurComplementPreconBuilder: S ($n2×$n2) is factorized"
+
+        return FullSchurComplementPreconditioner(
+            [1:n1, (n1 + 1):(n1 + n2)],
+            A_fac,
+            S_fac,
+            B,
+            zeros(n1),
+            zeros(n1),
+            zeros(n1),
+            zeros(n1),
+            zeros(n1),
+            zeros(n2),
+            zeros(n2),
+            zeros(n2),
+        )
+    end
+
+    return prec
+end
+
+
+function LinearAlgebra.ldiv!(u, p::FullSchurComplementPreconditioner, v)
+
+    # M⁻¹ =[ A⁻¹ + A⁻¹BS⁻¹BᵀA⁻¹   -A⁻¹BS⁻¹ ]
+    #      [ -S⁻¹BᵀA⁻¹            S⁻¹      ]
+
+    (part1, part2) = p.partitions
+    @views v1 = v[part1]
+    @views v2 = v[part2]
+
+    (; A_fac, S_fac, B, Av1_cache, Sv2_cache, BAv1_cache, BSv2_cache, BSBAv1_cache, ABSBAv1_cache, ABSBAv1_cache, ABSv2_cache, SBAv1_cache) = p
+
+    # A_fac \ v1
+    @showtime ldiv!(Av1_cache, A_fac, v1)
+
+    # S_fac \ v2
+    @showtime ldiv!(Sv2_cache, S_fac, v2)
+
+    # B' * (Av1_cache)
+    @showtime mul!(BAv1_cache, B', Av1_cache)
+
+    # S_fac \ BAv1_cache
+    @showtime ldiv!(SBAv1_cache, S_fac, BAv1_cache)
+
+    # B * Sv2_cache)
+    @showtime mul!(BSv2_cache, B, Sv2_cache)
+
+    # B * SBAv1_cache
+    @showtime mul!(BSBAv1_cache, B, SBAv1_cache)
+
+    # A_fac \ BSBAv1_cache
+    @showtime ldiv!(ABSBAv1_cache, A_fac, BSBAv1_cache)
+
+    # A_fac \ BSv2_cache
+    @showtime ldiv!(ABSv2_cache, A_fac, BSv2_cache)
+
+    @showtime @views u[part1] .= Av1_cache .+ ABSBAv1_cache .- ABSv2_cache
+    @showtime @views u[part2] .= Sv2_cache .- SBAv1_cache
+    return u
+end
+
+# function LinearAlgebra.ldiv!(p::FullSchurComplementPreconditioner, v)
+
+#     (part1, part2) = p.partitions
+#     @views ldiv!(p.A_fac, v[part1])
+#     @views ldiv!(p.S_fac, v[part2])
+
+#     return v
+# end

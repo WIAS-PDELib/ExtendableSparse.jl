@@ -5,6 +5,7 @@ $(read(joinpath(@__DIR__, "..", "README.md"), String))
 """
 module ExtendableSparse
 
+using ChunkSplitters: chunks
 using DocStringExtensions: DocStringExtensions, SIGNATURES, TYPEDEF, TYPEDFIELDS, TYPEDSIGNATURES
 using ILUZero: ILUZero
 using LinearAlgebra: LinearAlgebra, Diagonal, Hermitian, Symmetric, Tridiagonal, convert, mul!, ldiv!, lu
@@ -42,7 +43,7 @@ export eliminate_dirichlet, eliminate_dirichlet!, mark_dirichlet
 
 
 include("preconbuilders.jl")
-export LinearSolvePreconBuilder, BlockPreconBuilder, JacobiPreconBuilder, SchurComplementPreconBuilder
+export LinearSolvePreconBuilder, BlockPreconBuilder, JacobiPreconBuilder, SchurComplementPreconBuilder, FullSchurComplementPreconBuilder
 @public ILUZeroPreconBuilder, ILUTPreconBuilder
 
 
