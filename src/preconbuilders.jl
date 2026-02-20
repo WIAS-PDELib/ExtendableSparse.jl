@@ -434,38 +434,38 @@ function FullSchurComplementPreconBuilder(dofs_first_block, A_factorization, S_f
         # end
         # S .*= -1.0
 
-        # S = - B' * (Diagonal(A) \ B)
+        S = - B' * (Diagonal(A) \ B)
 
-        S = zeros(n2, n2)
+        # S = zeros(n2, n2)
 
-        function col_loop(col_chunk)
-            # sigh, some factorizations (like ilu0) store internal buffers. Hence, every thread needs a copy.
-            local A_fac_copy = deepcopy(A_fac)
+        # function col_loop(col_chunk)
+        #     # sigh, some factorizations (like ilu0) store internal buffers. Hence, every thread needs a copy.
+        #     local A_fac_copy = deepcopy(A_fac)
 
-            # local buffers and result
-            local ldiv_buffer = zeros(n1)
-            local Bcol_buffer = zeros(n1)
+        #     # local buffers and result
+        #     local ldiv_buffer = zeros(n1)
+        #     local Bcol_buffer = zeros(n1)
 
-            for (icol, col) in enumerate(col_chunk)
-                @info "col $icol of $(length(col_chunk))"
-                Bcol = B[:, col] # B is very sparse: this copy is fine?
-                Bcol_buffer .= 0.0
-                Bcol_buffer[Bcol.nzind] = Bcol.nzval
-                @views ldiv!(ldiv_buffer, A_fac_copy, Bcol_buffer)
-                @views mul!(S[:, col], B', ldiv_buffer, -1.0, 0.0)
-            end
-            return nothing
-        end
+        #     for (icol, col) in enumerate(col_chunk)
+        #         @info "col $icol of $(length(col_chunk))"
+        #         Bcol = B[:, col] # B is very sparse: this copy is fine?
+        #         Bcol_buffer .= 0.0
+        #         Bcol_buffer[Bcol.nzind] = Bcol.nzval
+        #         @views ldiv!(ldiv_buffer, A_fac_copy, Bcol_buffer)
+        #         @views mul!(S[:, col], B', ldiv_buffer, -1.0, 0.0)
+        #     end
+        #     return nothing
+        # end
 
-        # split columns into chunks and assemble S
-        col_chunks = chunks(1:n2, n = Threads.nthreads())
-        tasks = map(col_chunks) do col_chunk
-            @info "start thread"
-            Threads.@spawn col_loop(col_chunk)
-        end
+        # # split columns into chunks and assemble S
+        # col_chunks = chunks(1:n2, n = Threads.nthreads())
+        # tasks = map(col_chunks) do col_chunk
+        #     @info "start thread"
+        #     Threads.@spawn col_loop(col_chunk)
+        # end
 
-        # then S is ready
-        fetch.(tasks)
+        # # then S is ready
+        # fetch.(tasks)
 
         verbosity > 0 && @info "SchurComplementPreconBuilder: S ($n2×$n2) is computed"
 
