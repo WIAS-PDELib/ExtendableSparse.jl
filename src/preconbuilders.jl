@@ -329,7 +329,7 @@ Factory function creating preconditioners for saddle-point problems.
 
 Returns a function `prec(M, p)` that creates a `SchurComplementPreconditioner`.
 """
-function SchurComplementPreconBuilder(dofs_first_block, A_factorization, S_factorization = lu; verbosity = 0)
+function SchurComplementPreconBuilder(dofs_first_block, A_factorization, S_factorization = lu; verbosity = 0, flip_sign = false)
 
     # this is the resulting preconditioner
     function prec(M)
@@ -341,9 +341,12 @@ function SchurComplementPreconBuilder(dofs_first_block, A_factorization, S_facto
         n1 = dofs_first_block
         n2 = size(M, 1) - n1
 
+        part1 = 1:n1
+        part2 = (n1 + 1):(n1 + n2)
+
         # I see no other way than creating this expensive copy
-        A = M[1:n1, 1:n1]
-        B = M[1:n1, (n1 + 1):end]
+        A = M[part1, part1]
+        B = M[part1, part2]
 
         # first factorization
         A_fac = A_factorization(A)
@@ -355,6 +358,8 @@ function SchurComplementPreconBuilder(dofs_first_block, A_factorization, S_facto
         # we use the diagonal of A: this is _very_ performant and creates a sparse result
         S = - B' * (Diagonal(A) \ B)
 
+        flip_sign && S .*= -1.0
+
         verbosity > 0 && @info "SchurComplementPreconBuilder: S ($n2×$n2) is computed"
 
         # factorize S
@@ -362,7 +367,7 @@ function SchurComplementPreconBuilder(dofs_first_block, A_factorization, S_facto
 
         verbosity > 0 && @info "SchurComplementPreconBuilder: S ($n2×$n2) is factorized"
 
-        return SchurComplementPreconditioner([1:n1, (n1 + 1):(n1 + n2)], A_fac, S_fac)
+        return SchurComplementPreconditioner([part1, part2], A_fac, S_fac)
     end
 
     return prec
@@ -425,47 +430,7 @@ function FullSchurComplementPreconBuilder(dofs_first_block, A_factorization, S_f
 
         verbosity > 0 && @info "SchurComplementPreconBuilder: A ($n1×$n1) is factorized"
 
-        # compute dense (!) the Schur Matrix
-        # S ≈ -BᵀA⁻¹B
-        # S = zeros(n2, n2)
-        # for col in 1:n2
-        #     @show col
-        #     @views S[:, col] = B' * (A_fac \ Vector(B[:, col]))
-        # end
-        # S .*= -1.0
-
         S = - B' * (Diagonal(A) \ B)
-
-        # S = zeros(n2, n2)
-
-        # function col_loop(col_chunk)
-        #     # sigh, some factorizations (like ilu0) store internal buffers. Hence, every thread needs a copy.
-        #     local A_fac_copy = deepcopy(A_fac)
-
-        #     # local buffers and result
-        #     local ldiv_buffer = zeros(n1)
-        #     local Bcol_buffer = zeros(n1)
-
-        #     for (icol, col) in enumerate(col_chunk)
-        #         @info "col $icol of $(length(col_chunk))"
-        #         Bcol = B[:, col] # B is very sparse: this copy is fine?
-        #         Bcol_buffer .= 0.0
-        #         Bcol_buffer[Bcol.nzind] = Bcol.nzval
-        #         @views ldiv!(ldiv_buffer, A_fac_copy, Bcol_buffer)
-        #         @views mul!(S[:, col], B', ldiv_buffer, -1.0, 0.0)
-        #     end
-        #     return nothing
-        # end
-
-        # # split columns into chunks and assemble S
-        # col_chunks = chunks(1:n2, n = Threads.nthreads())
-        # tasks = map(col_chunks) do col_chunk
-        #     @info "start thread"
-        #     Threads.@spawn col_loop(col_chunk)
-        # end
-
-        # # then S is ready
-        # fetch.(tasks)
 
         verbosity > 0 && @info "SchurComplementPreconBuilder: S ($n2×$n2) is computed"
 
@@ -505,32 +470,35 @@ function LinearAlgebra.ldiv!(u, p::FullSchurComplementPreconditioner, v)
 
     (; A_fac, S_fac, B, Av1_cache, Sv2_cache, BAv1_cache, BSv2_cache, BSBAv1_cache, ABSBAv1_cache, ABSBAv1_cache, ABSv2_cache, SBAv1_cache) = p
 
-    # A_fac \ v1
-    @showtime ldiv!(Av1_cache, A_fac, v1)
+    # @info "↓ time for ldiv!"
+    begin
+        # A_fac \ v1
+        ldiv!(Av1_cache, A_fac, v1)
 
-    # S_fac \ v2
-    @showtime ldiv!(Sv2_cache, S_fac, v2)
+        # S_fac \ v2
+        ldiv!(Sv2_cache, S_fac, v2)
 
-    # B' * (Av1_cache)
-    @showtime mul!(BAv1_cache, B', Av1_cache)
+        # B' * (Av1_cache)
+        mul!(BAv1_cache, B', Av1_cache)
 
-    # S_fac \ BAv1_cache
-    @showtime ldiv!(SBAv1_cache, S_fac, BAv1_cache)
+        # S_fac \ BAv1_cache
+        ldiv!(SBAv1_cache, S_fac, BAv1_cache)
 
-    # B * Sv2_cache)
-    @showtime mul!(BSv2_cache, B, Sv2_cache)
+        # B * Sv2_cache)
+        mul!(BSv2_cache, B, Sv2_cache)
 
-    # B * SBAv1_cache
-    @showtime mul!(BSBAv1_cache, B, SBAv1_cache)
+        # B * SBAv1_cache
+        mul!(BSBAv1_cache, B, SBAv1_cache)
 
-    # A_fac \ BSBAv1_cache
-    @showtime ldiv!(ABSBAv1_cache, A_fac, BSBAv1_cache)
+        # A_fac \ BSBAv1_cache
+        ldiv!(ABSBAv1_cache, A_fac, BSBAv1_cache)
 
-    # A_fac \ BSv2_cache
-    @showtime ldiv!(ABSv2_cache, A_fac, BSv2_cache)
+        # A_fac \ BSv2_cache
+        ldiv!(ABSv2_cache, A_fac, BSv2_cache)
 
-    @showtime @views u[part1] .= Av1_cache .+ ABSBAv1_cache .- ABSv2_cache
-    @showtime @views u[part2] .= Sv2_cache .- SBAv1_cache
+        @views u[part1] .= Av1_cache .+ ABSBAv1_cache .- ABSv2_cache
+        @views u[part2] .= Sv2_cache .- SBAv1_cache
+    end
     return u
 end
 
@@ -539,6 +507,62 @@ end
 #     (part1, part2) = p.partitions
 #     @views ldiv!(p.A_fac, v[part1])
 #     @views ldiv!(p.S_fac, v[part2])
+
+#     return v
+# end
+
+
+struct AugmentedLagrangianPreconditioner{AT}
+    partitions
+    A_fac::AT
+    γ::Float64
+end
+
+
+function AugmentedLagrangianPreconditionerBuilder(dofs_first_block, A_factorization; γ, verbosity = 0)
+
+    # this is the resulting preconditioner
+    function prec(M)
+
+        # We have
+        # M = [ A  B ] → n1 dofs
+        #     [ Bᵀ 0 ] → n2 dofs
+
+        n1 = dofs_first_block
+        n2 = size(M, 1) - n1
+
+        # I see no other way than creating this expensive copy
+        A = M[1:n1, 1:n1]
+        B = M[1:n1, (n1 + 1):end]
+
+        A = A + γ * B * B'
+        verbosity > 0 && @info "AugmentedLagrangianPreconditioner: A + γBB' ($n1×$n1) computed"
+
+        # first factorization
+        A_fac = A_factorization(A)
+        verbosity > 0 && @info "AugmentedLagrangianPreconditioner: A is factorized"
+
+        return AugmentedLagrangianPreconditioner([1:n1, (n1 + 1):(n1 + n2)], A_fac, γ)
+    end
+
+    return prec
+end
+
+
+function LinearAlgebra.ldiv!(u, p::AugmentedLagrangianPreconditioner, v)
+
+    (part1, part2) = p.partitions
+    @views ldiv!(u[part1], p.A_fac, v[part1])
+    @views u[part2] = v[part2]
+
+    return u
+end
+
+# function LinearAlgebra.ldiv!(p::AugmentedLagrangianPreconditioner, v)
+
+#     (part1, part2) = p.partitions
+#     @views ldiv!(p.A_fac, v[part1])
+#     @views ldiv!(I, v[part2])
 
 #     return v
 # end

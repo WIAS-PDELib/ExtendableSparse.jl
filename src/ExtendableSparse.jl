@@ -8,7 +8,7 @@ module ExtendableSparse
 using ChunkSplitters: chunks
 using DocStringExtensions: DocStringExtensions, SIGNATURES, TYPEDEF, TYPEDFIELDS, TYPEDSIGNATURES
 using ILUZero: ILUZero
-using LinearAlgebra: LinearAlgebra, Diagonal, Hermitian, Symmetric, Tridiagonal, convert, mul!, ldiv!, lu
+using LinearAlgebra: LinearAlgebra, Diagonal, Hermitian, Symmetric, Tridiagonal, convert, mul!, ldiv!, lu, I
 using SparseArrays: SparseArrays, AbstractSparseMatrix, AbstractSparseMatrixCSC, SparseMatrixCSC
 using SparseArrays: dropzeros!, findnz, nzrange, sparse, spzeros, rowvals, getcolptr, nonzeros, nnz
 using Sparspak: sparspaklu
@@ -43,7 +43,7 @@ export eliminate_dirichlet, eliminate_dirichlet!, mark_dirichlet
 
 
 include("preconbuilders.jl")
-export LinearSolvePreconBuilder, BlockPreconBuilder, JacobiPreconBuilder, SchurComplementPreconBuilder, FullSchurComplementPreconBuilder
+export LinearSolvePreconBuilder, BlockPreconBuilder, JacobiPreconBuilder, SchurComplementPreconBuilder, FullSchurComplementPreconBuilder, AugmentedLagrangianPreconditionerBuilder
 @public ILUZeroPreconBuilder, ILUTPreconBuilder
 
 
