@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.1.0]
+
+- Add `SchurComplementPreconditioner` and `SchurComplementPreconBuilder`
+
 ## [2.0.0] - 2026-01-06
 
 - Remove solver + precon API which is not based on precs or directly overloading `\`.
