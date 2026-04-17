@@ -43,6 +43,7 @@ export eliminate_dirichlet, eliminate_dirichlet!, mark_dirichlet
 
 include("preconbuilders.jl")
 export LinearSolvePreconBuilder, BlockPreconBuilder, JacobiPreconBuilder
+export ProductPreconBuilder, IdentityPreconBuilder
 @public ILUZeroPreconBuilder, ILUTPreconBuilder
 
 

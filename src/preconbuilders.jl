@@ -102,14 +102,18 @@ end
 
 mutable struct BlockPreconditioner
     A::AbstractMatrix
-    factorization
+    factorizations
     partitioning::Union{Nothing, Vector{AbstractVector}}
     facts::Vector
-    function BlockPreconditioner(A; partitioning = nothing, factorization = nothing)
+    function BlockPreconditioner(A; partitioning = nothing, factorization = nothing, factorizations = nothing)
         p = new()
         p.A = A
         p.partitioning = partitioning
-        p.factorization = factorization
+        if !isnothing(factorization)
+            p.factorizations = [factorization for i in 1:length(partitioning)]
+        else
+            p.factorizations = factorizations
+        end
         update!(p)
         return p
     end
@@ -151,10 +155,8 @@ function update!(precon::BlockPreconditioner)
     np = length(precon.partitioning)
     precon.facts = Vector{Any}(undef, np)
     return Threads.@threads for ipart in 1:np
-        factorization = deepcopy(precon.factorization)
         AP = precon.A[precon.partitioning[ipart], precon.partitioning[ipart]]
-        FP = factorization(AP)
-        precon.facts[ipart] = FP
+        precon.facts[ipart] = precon.factorizations[ipart](AP)
     end
 end
 
@@ -164,12 +166,10 @@ function LinearAlgebra.ldiv!(p::BlockPreconditioner, v)
     facts = p.facts
     np = length(partitioning)
 
-    if allow_views(p.factorization)
-        Threads.@threads for ipart in 1:np
+    Threads.@threads for ipart in 1:np
+        if allow_views(p.factorizations[ipart])
             ldiv!(facts[ipart], view(v, partitioning[ipart]))
-        end
-    else
-        Threads.@threads for ipart in 1:np
+        else
             vv = v[partitioning[ipart]]
             ldiv!(facts[ipart], vv)
             view(v, partitioning[ipart]) .= vv
@@ -182,12 +182,10 @@ function LinearAlgebra.ldiv!(u, p::BlockPreconditioner, v)
     partitioning = p.partitioning
     facts = p.facts
     np = length(partitioning)
-    if allow_views(p.factorization)
-        Threads.@threads for ipart in 1:np
+    Threads.@threads for ipart in 1:np
+        if allow_views(p.factorizations[ipart])
             ldiv!(view(u, partitioning[ipart]), facts[ipart], view(v, partitioning[ipart]))
-        end
-    else
-        Threads.@threads for ipart in 1:np
+        else
             uu = u[partitioning[ipart]]
             ldiv!(uu, facts[ipart], v[partitioning[ipart]])
             view(u, partitioning[ipart]) .= uu
@@ -209,7 +207,8 @@ from partition of unknowns.
 - `partitioning(A)`  shall return a vector of AbstractVectors describing the indices of the partitions of the matrix. 
   For a matrix of size `n x n`, e.g. partitioning could be `[ 1:n÷2, (n÷2+1):n]` or [ 1:2:n, 2:2:n].
 
-- `precs(A,p)` shall return a left precondioner for a matrix block.
+- `precs(A,p)` shall return a left precondioner for a matrix block. It may be one function used for each partition
+   or a vector of functions - one for each partition.
 """
 Base.@kwdef mutable struct BlockPreconBuilder
     precs = UMFPACKPreconBuilder()
@@ -218,8 +217,14 @@ end
 
 function (blockprecs::BlockPreconBuilder)(A, p)
     (; precs, partitioning) = blockprecs
-    factorization = A -> precs(A, p)[1]
-    bp = BlockPreconditioner(A; partitioning = partitioning(A), factorization)
+    Apart = partitioning(A)
+    npart = length(Apart)
+    if isa(precs, Vector)
+        factorizations = [A -> precs[i](A, p)[1] for i in 1:npart]
+    else
+        factorizations = [A -> precs(A, p)[1] for i in 1:npart]
+    end
+    bp = BlockPreconditioner(A; partitioning = Apart, factorizations)
     return (bp, LinearAlgebra.I)
 end
 
@@ -294,3 +299,55 @@ LinearAlgebra.ldiv!(fact::JacobiPreconditioner, v) = ldiv!(fact.factorization, v
 
 allow_views(::JacobiPreconditioner) = true
 allow_views(::Type{JacobiPreconditioner}) = true
+
+
+Base.@kwdef struct ProductPreconditioner
+    A::AbstractMatrix
+    precon1
+    precon2
+end
+
+Base.@kwdef mutable struct ProductPreconBuilder
+    precs1 = JacobiPreconBuilder()
+    precs2 = JacobiPreconBuilder()
+end
+
+function (prodprecs::ProductPreconBuilder)(A, p)
+    precon1 = prodprecs.precs1(A, p)[1]
+    precon2 = prodprecs.precs2(A, p)[1]
+    return ProductPreconditioner(A, precon1, precon2), LinearAlgebra.I
+end
+
+function LinearAlgebra.ldiv!(u, p::ProductPreconditioner, v)
+    u1 = similar(u)
+    u2 = similar(u)
+    u3 = similar(u)
+    ldiv!(u1, p.precon1, v)
+    ldiv!(u2, p.precon2, v)
+    mul!(u3, p.A, -u1)
+    ldiv!(u, p.precon2, u3)
+    u .+= u1
+    u .+= u2
+    return u
+end
+
+function LinearAlgebra.ldiv!(p::ProductPreconditioner, v)
+    u1 = similar(v)
+    u2 = similar(v)
+    u3 = similar(v)
+    ldiv!(u1, p.precon1, v)
+    ldiv!(u2, p.precon2, v)
+    mul!(u3, p.A, -u1)
+    ldiv!(v, p.precon2, u3)
+    v .+= u1
+    v .+= u2
+    return v
+end
+
+
+struct IdentityPreconBuilder
+end
+
+function (::IdentityPreconBuilder)(A, p)
+    return LinearAlgebra.I, LinearAlgebra.I
+end
