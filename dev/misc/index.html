@@ -108,21 +108,6 @@ fdrand_coo(T, nx, ny, nz; rand)
 ) -&gt; ExtendableSparse.GenericMTExtendableSparseMatrixCSC{Tm, Tv, Ti} where {Tm, Tv, Ti}
 </code></pre><p>Set node partitioning.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/WIAS-PDELib/ExtendableSparse.jl">source</a></section></details></article><article><details class="docstring" open="true"><summary id="ExtendableSparse.pattern_equal-Tuple{SparseMatrixCSC, SparseMatrixCSC}"><a class="docstring-binding" href="#ExtendableSparse.pattern_equal-Tuple{SparseMatrixCSC, SparseMatrixCSC}"><code>ExtendableSparse.pattern_equal</code></a> — <span class="docstring-category">Method</span></summary><section><div><pre><code class="language-julia hljs">pattern_equal(a::SparseMatrixCSC,b::SparseMatrixCSC)</code></pre><p>Check if sparsity patterns of two SparseMatrixCSC objects are equal. This is generally faster than comparing hashes.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/WIAS-PDELib/ExtendableSparse.jl">source</a></section></details></article><article><details class="docstring" open="true"><summary id="ExtendableSparse.phash-Tuple{SparseMatrixCSC}"><a class="docstring-binding" href="#ExtendableSparse.phash-Tuple{SparseMatrixCSC}"><code>ExtendableSparse.phash</code></a> — <span class="docstring-category">Method</span></summary><section><div><pre><code class="language-julia hljs">phash(csc::SparseMatrixCSC) -&gt; Any
 </code></pre><p>Hash of csc matrix pattern. </p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/WIAS-PDELib/ExtendableSparse.jl">source</a></section></details></article><article><details class="docstring" open="true"><summary id="ExtendableSparse.rawupdateindex!"><a class="docstring-binding" href="#ExtendableSparse.rawupdateindex!"><code>ExtendableSparse.rawupdateindex!</code></a> — <span class="docstring-category">Function</span></summary><section><div><pre><code class="language-julia hljs">rawupdateindex!(
-    ext::ExtendableSparse.GenericExtendableSparseMatrixCSC,
-    op,
-    v,
-    i,
-    j
-) -&gt; Any
-rawupdateindex!(
-    ext::ExtendableSparse.GenericExtendableSparseMatrixCSC,
-    op,
-    v,
-    i,
-    j,
-    part
-) -&gt; Any
-</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/WIAS-PDELib/ExtendableSparse.jl">source</a></section></details></article><article><details class="docstring" open="true"><summary id="ExtendableSparse.rawupdateindex!"><a class="docstring-binding" href="#ExtendableSparse.rawupdateindex!"><code>ExtendableSparse.rawupdateindex!</code></a> — <span class="docstring-category">Function</span></summary><section><div><pre><code class="language-julia hljs">rawupdateindex!(A::AbstractExtendableSparseMatrixCSC,op,v,i,j,part = 1)</code></pre><p>Add or update entry of A: <code>A[i,j]=op(A[i,j],v)</code> without checking  if a zero is inserted. The optional parameter part denotes the partition.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/WIAS-PDELib/ExtendableSparse.jl">source</a></section></details></article><article><details class="docstring" open="true"><summary id="ExtendableSparse.rawupdateindex!"><a class="docstring-binding" href="#ExtendableSparse.rawupdateindex!"><code>ExtendableSparse.rawupdateindex!</code></a> — <span class="docstring-category">Function</span></summary><section><div><pre><code class="language-julia hljs">rawupdateindex!(
     ext::ExtendableSparse.GenericMTExtendableSparseMatrixCSC,
     op,
     v,
@@ -137,7 +122,22 @@ rawupdateindex!(
     j,
     tid
 ) -&gt; Any
-</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/WIAS-PDELib/ExtendableSparse.jl">source</a></section></details></article><article><details class="docstring" open="true"><summary id="ExtendableSparse.reset!-Tuple{ExtendableSparse.GenericMTExtendableSparseMatrixCSC}"><a class="docstring-binding" href="#ExtendableSparse.reset!-Tuple{ExtendableSparse.GenericMTExtendableSparseMatrixCSC}"><code>ExtendableSparse.reset!</code></a> — <span class="docstring-category">Method</span></summary><section><div><pre><code class="language-julia hljs">reset!(
+</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/WIAS-PDELib/ExtendableSparse.jl">source</a></section></details></article><article><details class="docstring" open="true"><summary id="ExtendableSparse.rawupdateindex!"><a class="docstring-binding" href="#ExtendableSparse.rawupdateindex!"><code>ExtendableSparse.rawupdateindex!</code></a> — <span class="docstring-category">Function</span></summary><section><div><pre><code class="language-julia hljs">rawupdateindex!(
+    ext::ExtendableSparse.GenericExtendableSparseMatrixCSC,
+    op,
+    v,
+    i,
+    j
+) -&gt; Any
+rawupdateindex!(
+    ext::ExtendableSparse.GenericExtendableSparseMatrixCSC,
+    op,
+    v,
+    i,
+    j,
+    part
+) -&gt; Any
+</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/WIAS-PDELib/ExtendableSparse.jl">source</a></section></details></article><article><details class="docstring" open="true"><summary id="ExtendableSparse.rawupdateindex!"><a class="docstring-binding" href="#ExtendableSparse.rawupdateindex!"><code>ExtendableSparse.rawupdateindex!</code></a> — <span class="docstring-category">Function</span></summary><section><div><pre><code class="language-julia hljs">rawupdateindex!(A::AbstractExtendableSparseMatrixCSC,op,v,i,j,part = 1)</code></pre><p>Add or update entry of A: <code>A[i,j]=op(A[i,j],v)</code> without checking  if a zero is inserted. The optional parameter part denotes the partition.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/WIAS-PDELib/ExtendableSparse.jl">source</a></section></details></article><article><details class="docstring" open="true"><summary id="ExtendableSparse.reset!-Tuple{ExtendableSparse.GenericMTExtendableSparseMatrixCSC}"><a class="docstring-binding" href="#ExtendableSparse.reset!-Tuple{ExtendableSparse.GenericMTExtendableSparseMatrixCSC}"><code>ExtendableSparse.reset!</code></a> — <span class="docstring-category">Method</span></summary><section><div><pre><code class="language-julia hljs">reset!(
     ext::ExtendableSparse.GenericMTExtendableSparseMatrixCSC
 ) -&gt; ExtendableSparse.GenericMTExtendableSparseMatrixCSC
 </code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/WIAS-PDELib/ExtendableSparse.jl">source</a></section></details></article><article><details class="docstring" open="true"><summary id="ExtendableSparse.reset!-Union{Tuple{ExtendableSparse.GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}}, Tuple{Ti}, Tuple{Tv}, Tuple{Tm}} where {Tm, Tv, Ti}"><a class="docstring-binding" href="#ExtendableSparse.reset!-Union{Tuple{ExtendableSparse.GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}}, Tuple{Ti}, Tuple{Tv}, Tuple{Tm}} where {Tm, Tv, Ti}"><code>ExtendableSparse.reset!</code></a> — <span class="docstring-category">Method</span></summary><section><div><pre><code class="language-julia hljs">reset!(
