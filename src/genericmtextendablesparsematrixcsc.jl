@@ -148,12 +148,12 @@ nnznew(ext::GenericMTExtendableSparseMatrixCSC) = sum(nnz, ext.xmatrices)
 """
 function rawupdateindex!(
         ext::GenericMTExtendableSparseMatrixCSC,
-        op,
+        op::Op,
         v,
         i,
         j,
         tid = 1
-    )
+    ) where {Op}
     k = findindex(ext.cscmatrix, i, j)
     return if k > 0
         ext.cscmatrix.nzval[k] = op(ext.cscmatrix.nzval[k], v)
@@ -168,12 +168,12 @@ end
 """
 function updateindex!(
         ext::GenericMTExtendableSparseMatrixCSC,
-        op,
+        op::Op,
         v,
         i,
         j,
         tid = 1
-    )
+    ) where {Op}
     k = findindex(ext.cscmatrix, i, j)
     return if k > 0
         ext.cscmatrix.nzval[k] = op(ext.cscmatrix.nzval[k], v)
