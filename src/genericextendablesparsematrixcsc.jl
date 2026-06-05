@@ -137,12 +137,12 @@ end
 """
 function rawupdateindex!(
         ext::GenericExtendableSparseMatrixCSC,
-        op,
+        op::Op,
         v,
         i,
         j,
         part = 1
-    )
+    ) where {Op}
     k = findindex(ext.cscmatrix, i, j)
     return if k > 0
         ext.cscmatrix.nzval[k] = op(ext.cscmatrix.nzval[k], v)
@@ -151,16 +151,17 @@ function rawupdateindex!(
     end
 end
 
+
 """
     $(TYPEDSIGNATURES)
 """
 function updateindex!(
         ext::GenericExtendableSparseMatrixCSC,
-        op,
+        op::Op,
         v,
         i,
         j
-    )
+    ) where {Op}
     k = findindex(ext.cscmatrix, i, j)
     return if k > 0
         ext.cscmatrix.nzval[k] = op(ext.cscmatrix.nzval[k], v)

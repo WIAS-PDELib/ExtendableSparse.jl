@@ -85,7 +85,7 @@ end
 """
     $(TYPEDSIGNATURES)
 """
-function rawupdateindex!(m::SparseMatrixDict{Tv, Ti}, op, v, i, j) where {Tv, Ti}
+function rawupdateindex!(m::SparseMatrixDict{Tv, Ti}, op::Op, v, i, j) where {Tv, Ti, Op}
     p = Pair(i, j)
     return m.values[p] = op(get(m.values, p, zero(Tv)), v)
 end
@@ -94,7 +94,7 @@ end
 """
     $(TYPEDSIGNATURES)
 """
-function updateindex!(m::SparseMatrixDict{Tv, Ti}, op, v, i, j) where {Tv, Ti}
+function updateindex!(m::SparseMatrixDict{Tv, Ti}, op::Op, v, i, j) where {Tv, Ti, Op}
     p = Pair(i, j)
     v1 = op(get(m.values, p, zero(Tv)), v)
     if !iszero(v1)
