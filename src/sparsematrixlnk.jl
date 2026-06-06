@@ -18,7 +18,7 @@ can be conveniently updated via `push!`.  No copying of existing data is necessa
 
 Via the type aliases [`STExtendableSparseMatrixCSC`](@ref), [`ExtendableSparseMatrixCSC`](@ref),
 and [`ExtendableSparseMatrix`](@ref) this extension is used as default for handling
-scalar assembly.
+sequential assembly.
 
 
 $(TYPEDFIELDS)
