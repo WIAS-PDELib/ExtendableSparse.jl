@@ -443,11 +443,7 @@ function Base.sum(lnkdictmatrices::Vector{SparseMatrixDILNKC{Tv, Ti}}, cscmatrix
             end
         end
         @assert l == i - 1
-        @static if VERSION >= v"1.10"
-            return SparseArrays.sparse!(I, J, V, m, n, +)
-        else
-            return SparseArrays.sparse(I, J, V, m, n, +)
-        end
+        return SparseArrays.sparse!(I, J, V, m, n, +)
     end
     return cscmatrix
 end
