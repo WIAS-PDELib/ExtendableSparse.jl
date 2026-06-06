@@ -111,7 +111,7 @@ Base.eltype(::AbstractExtendableSparseMatrixCSC{Tv, Ti}) where {Tv, Ti} = Tv
 
 Return element type.
 """
-SparseArrays.indtype(A::AbstractExtendableSparseMatrixCSC{Tv, Ti})  where {Tv, Ti} = Ti 
+SparseArrays.indtype(A::AbstractExtendableSparseMatrixCSC{Tv, Ti}) where {Tv, Ti} = Ti
 
 """
     SparseArrays.SparseMatrixCSC(A::AbstractExtendableSparseMatrixCSC)
@@ -371,10 +371,10 @@ end
 
 Efficient sum of ExtendableSparse matrices.
 """
-function Base.sum(M::AbstractVector{TM}) where TM<:AbstractExtendableSparseMatrixCSC
+function Base.sum(M::AbstractVector{TM}) where {TM <: AbstractExtendableSparseMatrixCSC}
     Ti = promote_type(indtype.(M)...)
     Tv = promote_type(eltype.(M)...)
-    return _sum(M,Tv,Ti)
+    return _sum(M, Tv, Ti)
 end
 
 function _sum(M, ::Type{Tv}, ::Type{Ti}) where {Tv, Ti}
