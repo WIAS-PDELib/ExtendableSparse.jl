@@ -300,51 +300,65 @@ LinearAlgebra.ldiv!(fact::JacobiPreconditioner, v) = ldiv!(fact.factorization, v
 allow_views(::JacobiPreconditioner) = true
 allow_views(::Type{JacobiPreconditioner}) = true
 
+"""
+    struct ProductPreconditioner
 
-Base.@kwdef struct ProductPreconditioner
-    A::AbstractMatrix
-    precon1
-    precon2
+Product of two left preconditioning steps.
+The operation ``u=M^{-1}v`` is defined by two simple iteration steps
+with two different preconditioners ``M_1`` and ``M_2``:
+Let ``u_0=0``. Then calculate
+```math    
+ \\begin{align*}
+   u_1&= u_0 - M_1^{-1}(Au_0 - v) = M_1^{-1}v\\\\
+   u  &= u_1 - M_2^{-1}(Au_1 - v)
+  \\end{align*}
+```
+"""
+Base.@kwdef struct ProductPreconditioner{TA, TM1, TM2}
+    A::TA
+    M1::TM1
+    M2::TM2
 end
 
+function LinearAlgebra.ldiv!(u, p::ProductPreconditioner, v)
+    (; A, M1, M2) = p
+    u1 = similar(u)
+    u2 = similar(u)
+    ldiv!(u1, M1, v)
+    mul!(u2, A, u1)
+    ldiv!(u, M2, v - u2)
+    u .+= u1
+    return u
+end
+
+function LinearAlgebra.ldiv!(p::ProductPreconditioner, v)
+    u = ldiv!(copy(v), p, v)
+    v .= u
+    return v
+end
+
+
+"""
+    struct ProductPreconBuilder
+
+LinearSolve `precs` compatible preonditioner constructor for [`ProductPreconditioner`](@ref)
+"""
 Base.@kwdef mutable struct ProductPreconBuilder
     precs1 = JacobiPreconBuilder()
     precs2 = JacobiPreconBuilder()
 end
 
 function (prodprecs::ProductPreconBuilder)(A, p)
-    precon1 = prodprecs.precs1(A, p)[1]
-    precon2 = prodprecs.precs2(A, p)[1]
-    return ProductPreconditioner(A, precon1, precon2), LinearAlgebra.I
+    M1 = prodprecs.precs1(A, p)[1]
+    M2 = prodprecs.precs2(A, p)[1]
+    return ProductPreconditioner(A, M1, M2), LinearAlgebra.I
 end
 
-function LinearAlgebra.ldiv!(u, p::ProductPreconditioner, v)
-    u1 = similar(u)
-    u2 = similar(u)
-    u3 = similar(u)
-    ldiv!(u1, p.precon1, v)
-    ldiv!(u2, p.precon2, v)
-    mul!(u3, p.A, -u1)
-    ldiv!(u, p.precon2, u3)
-    u .+= u1
-    u .+= u2
-    return u
-end
+"""
+    struct IdentityPreconBuilder
 
-function LinearAlgebra.ldiv!(p::ProductPreconditioner, v)
-    u1 = similar(v)
-    u2 = similar(v)
-    u3 = similar(v)
-    ldiv!(u1, p.precon1, v)
-    ldiv!(u2, p.precon2, v)
-    mul!(u3, p.A, -u1)
-    ldiv!(v, p.precon2, u3)
-    v .+= u1
-    v .+= u2
-    return v
-end
-
-
+LinearSolve `precs` compatible preonditioner constructor for trivial preonditioner.
+"""
 struct IdentityPreconBuilder
 end
 

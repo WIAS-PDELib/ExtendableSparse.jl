@@ -108,3 +108,7 @@ end
 @testset "Block" begin
     include("test_block.jl")
 end
+
+@testset "Product" begin
+    include("test_prod.jl")
+end
