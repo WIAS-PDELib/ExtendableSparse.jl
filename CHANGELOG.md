@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.3.0] - 2026-06-16
+- Product and Identity preconditioners and PreconBuilders
+- Block preconditioner and PreconBuilder now allow for vector 
+  of preconditioners, possibly different for each block
+
+## [2.2.0] - 2026-06-11
+- Base.similar method for GenericSparseMatrix
+
+## [2.1.0] - 2026-06-06
+- Base.sum for ExtendableSparse
+- fix allocations in lnk+csc matrix addition
+
 ## [2.0.0] - 2026-01-06
 
 - Remove solver + precon API which is not based on precs or directly overloading `\`.
