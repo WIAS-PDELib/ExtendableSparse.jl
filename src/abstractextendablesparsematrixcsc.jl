@@ -106,6 +106,12 @@ Return element type.
 """
 Base.eltype(::AbstractExtendableSparseMatrixCSC{Tv, Ti}) where {Tv, Ti} = Tv
 
+"""
+    SparseArrays.indtype(A::AbstractExtendableSparseMatrixCSC{Tv, Ti})
+
+Return element type.
+"""
+SparseArrays.indtype(A::AbstractExtendableSparseMatrixCSC{Tv, Ti}) where {Tv, Ti} = Ti
 
 """
     SparseArrays.SparseMatrixCSC(A::AbstractExtendableSparseMatrixCSC)
@@ -360,6 +366,37 @@ function Base.:-(csc::SparseMatrixCSC, ext::AbstractExtendableSparseMatrixCSC)
     return csc - sparse(ext)
 end
 
+"""
+    Base.sum(M::AbstractVector{TM}) where TM<:AbstractExtendableSparseMatrixCSC
+
+Efficient sum of ExtendableSparse matrices.
+"""
+function Base.sum(M::AbstractVector{TM}) where {TM <: AbstractExtendableSparseMatrixCSC}
+    Ti = promote_type(indtype.(M)...)
+    Tv = promote_type(eltype.(M)...)
+    return _sum(M, Tv, Ti)
+end
+
+function _sum(M, ::Type{Tv}, ::Type{Ti}) where {Tv, Ti}
+    l = sum(nnz, M)
+    I = Vector{Ti}(undef, l)
+    J = Vector{Ti}(undef, l)
+    V = Vector{Tv}(undef, l)
+
+    i = 1
+    @time for m in M
+        (; colptr, nzval, rowval) = sparse(m)
+        for icsc in 1:(length(colptr) - 1)
+            for j in colptr[icsc]:(colptr[icsc + 1] - 1)
+                I[i] = rowval[j]
+                J[i] = icsc
+                V[i] = nzval[j]
+                i = i + 1
+            end
+        end
+    end
+    return SparseArrays.sparse!(I, J, V)
+end
 
 """
 $(TYPEDSIGNATURES)

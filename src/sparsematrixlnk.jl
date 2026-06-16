@@ -18,7 +18,7 @@ can be conveniently updated via `push!`.  No copying of existing data is necessa
 
 Via the type aliases [`STExtendableSparseMatrixCSC`](@ref), [`ExtendableSparseMatrixCSC`](@ref),
 and [`ExtendableSparseMatrix`](@ref) this extension is used as default for handling
-scalar assembly.
+sequential assembly.
 
 
 $(TYPEDFIELDS)
@@ -216,7 +216,7 @@ Update element of the matrix  with operation `op`.
 It assumes that `op(0,0)==0`. If `v` is zero, no new 
 entry is created.
 """
-function updateindex!(lnk::SparseMatrixLNK{Tv, Ti}, op, v, i, j) where {Tv, Ti}
+function updateindex!(lnk::SparseMatrixLNK{Tv, Ti}, op::Op, v, i, j) where {Tv, Ti, Op}
     # Set the first  column entry if it was not yet set.
     if lnk.rowval[j] == 0 && !iszero(v)
         lnk.rowval[j] = i
@@ -243,7 +243,7 @@ Update element of the matrix  with operation `op`.
 It assumes that `op(0,0)==0`. If `v` is zero a new entry
 is created nevertheless.
 """
-function rawupdateindex!(lnk::SparseMatrixLNK{Tv, Ti}, op, v, i, j) where {Tv, Ti}
+function rawupdateindex!(lnk::SparseMatrixLNK{Tv, Ti}, op::Op, v, i, j) where {Tv, Ti, Op}
     # Set the first  column entry if it was not yet set.
     if lnk.rowval[j] == 0
         lnk.rowval[j] = i
@@ -278,13 +278,13 @@ SparseArrays.nnz(lnk::SparseMatrixLNK) = lnk.nnz
 
 # Struct holding pair of value and row
 # number, for sorting
-mutable struct ColEntry{Tv, Ti <: Integer}
+struct ColEntry{Tv, Ti <: Integer}
     rowval::Ti
     nzval::Tv
 end
 
 # Comparison method for sorting
-Base.isless(x::ColEntry, y::ColEntry) = (x.rowval < y.rowval)
+Base.isless(x::ColEntry{Tv, Ti}, y::ColEntry{Tv, Ti}) where {Tv, Ti} = (x.rowval < y.rowval)
 
 """
 $(TYPEDSIGNATURES)

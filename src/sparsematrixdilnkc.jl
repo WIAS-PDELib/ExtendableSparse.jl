@@ -218,7 +218,7 @@ Update element of the matrix  with operation `op`.
 It assumes that `op(0,0)==0`. If `v` is zero, no new 
 entry is created.
 """
-function updateindex!(lnk::SparseMatrixDILNKC{Tv, Ti}, op, v, i, j) where {Tv, Ti}
+function updateindex!(lnk::SparseMatrixDILNKC{Tv, Ti}, op::Op, v, i, j) where {Tv, Ti, Op}
     k, k0 = findindex(lnk, i, j)
     if k > 0
         lnk.nzval[k] = op(lnk.nzval[k], v)
@@ -238,7 +238,7 @@ Update element of the matrix  with operation `op`.
 It assumes that `op(0,0)==0`. If `v` is zero a new entry
 is created nevertheless.
 """
-function rawupdateindex!(lnk::SparseMatrixDILNKC{Tv, Ti}, op, v, i, j) where {Tv, Ti}
+function rawupdateindex!(lnk::SparseMatrixDILNKC{Tv, Ti}, op::Op, v, i, j) where {Tv, Ti, Op}
     k, k0 = findindex(lnk, i, j)
     if k > 0
         lnk.nzval[k] = op(lnk.nzval[k], v)
@@ -443,11 +443,7 @@ function Base.sum(lnkdictmatrices::Vector{SparseMatrixDILNKC{Tv, Ti}}, cscmatrix
             end
         end
         @assert l == i - 1
-        @static if VERSION >= v"1.10"
-            return SparseArrays.sparse!(I, J, V, m, n, +)
-        else
-            return SparseArrays.sparse(I, J, V, m, n, +)
-        end
+        return SparseArrays.sparse!(I, J, V, m, n, +)
     end
     return cscmatrix
 end

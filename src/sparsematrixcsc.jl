@@ -48,7 +48,7 @@ A
 ```
 
 """
-function updateindex!(csc::SparseMatrixCSC{Tv, Ti}, op, v, i, j) where {Tv, Ti <: Integer}
+function updateindex!(csc::SparseMatrixCSC{Tv, Ti}, op::Op, v, i, j) where {Tv, Ti <: Integer, Op}
     k = findindex(csc, i, j)
     if k > 0 # update existing value
         csc.nzval[k] = op(csc.nzval[k], v)

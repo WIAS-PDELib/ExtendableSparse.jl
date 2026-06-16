@@ -49,6 +49,24 @@ end
 """
     $(TYPEDSIGNATURES)
 """
+function Base.similar(M::GenericMTExtendableSparseMatrixCSC{Tm, Tv, Ti}) where {Tm, Tv, Ti}
+    (m, n) = size(M)
+    p = length(M.xmatrices)
+    xmatrices = [Tm(m, n) for i in 1:p]
+    colparts = M.colparts
+    partnodes = M.partnodes
+    return GenericMTExtendableSparseMatrixCSC(
+        spzeros(Tv, Ti, m, n),
+        xmatrices,
+        colparts,
+        partnodes
+    )
+end
+
+
+"""
+    $(TYPEDSIGNATURES)
+"""
 function reset!(ext::GenericMTExtendableSparseMatrixCSC{Tm, Tv, Ti}, p::Integer) where {Tm, Tv, Ti}
     m, n = size(ext.cscmatrix)
     ext.cscmatrix = spzeros(Tv, Ti, m, n)
@@ -148,12 +166,12 @@ nnznew(ext::GenericMTExtendableSparseMatrixCSC) = sum(nnz, ext.xmatrices)
 """
 function rawupdateindex!(
         ext::GenericMTExtendableSparseMatrixCSC,
-        op,
+        op::Op,
         v,
         i,
         j,
         tid = 1
-    )
+    ) where {Op}
     k = findindex(ext.cscmatrix, i, j)
     return if k > 0
         ext.cscmatrix.nzval[k] = op(ext.cscmatrix.nzval[k], v)
@@ -168,12 +186,12 @@ end
 """
 function updateindex!(
         ext::GenericMTExtendableSparseMatrixCSC,
-        op,
+        op::Op,
         v,
         i,
         j,
         tid = 1
-    )
+    ) where {Op}
     k = findindex(ext.cscmatrix, i, j)
     return if k > 0
         ext.cscmatrix.nzval[k] = op(ext.cscmatrix.nzval[k], v)
