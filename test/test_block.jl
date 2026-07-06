@@ -2,7 +2,7 @@ module test_block
 using Test
 using ExtendableSparse
 using ExtendableSparse: BlockPreconditioner, jacobi
-using ILUZero, AlgebraicMultigrid
+using ILUZero
 using IterativeSolvers
 using LinearAlgebra
 using Sparspak
