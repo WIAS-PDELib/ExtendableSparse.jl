@@ -14,10 +14,6 @@ function main(; n = 100)
     b = A * sol0
 
 
-    # need to reinit random so the shadow residual is the same for all calls
-    Random.seed!(seed)
-
-
     IdB = IdentityPreconBuilder()
     IluB = ILUZeroPreconBuilder()
     ProdB1 = ProductPreconBuilder(IdB, IluB)
@@ -41,6 +37,8 @@ function main(; n = 100)
 
     @test norm(x2 - y1, Inf) ≈ 0 atol = 5.0e-14
 
+    # need to reinit random so the shadow residual is the same for all calls
+    Random.seed!(seed)
     sol1, hist1 = bicgstabl(A, b, log = true)
     @test sol1 ≈ sol0 rtol = 1.0e-5
     @show hist1
