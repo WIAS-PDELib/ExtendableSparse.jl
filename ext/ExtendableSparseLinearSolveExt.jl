@@ -1,5 +1,5 @@
 module ExtendableSparseLinearSolveExt
-using LinearSolve
+using LinearSolve: LinearSolve, LinearProblem, solve!, init
 import ExtendableSparse: LinearSolvePreconBuilder
 import LinearAlgebra
 using SparseArrays: AbstractSparseMatrixCSC

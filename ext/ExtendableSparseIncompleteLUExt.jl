@@ -1,8 +1,8 @@
 module ExtendableSparseIncompleteLUExt
 using ExtendableSparse
-using IncompleteLU
+using IncompleteLU: IncompleteLU
 using LinearAlgebra: I
-using SparseArrays: AbstractSparseMatrixCSC, SparseMatrixCSC, getcolptr, rowvals, nonzeros
+using SparseArrays: AbstractSparseMatrixCSC, SparseMatrixCSC
 
 import ExtendableSparse: ILUTPreconBuilder
 
