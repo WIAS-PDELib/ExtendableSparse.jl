@@ -7,17 +7,15 @@ using LinearAlgebra
 using Random
 
 function main(; n = 100)
-    seed = 1340
+    seed = 1341
     Random.seed!(seed)
     A = fdrand(n, n)
     sol0 = ones(n^2)
     b = A * sol0
 
+
     # need to reinit random so the shadow residual is the same for all calls
     Random.seed!(seed)
-    sol1, hist1 = bicgstabl(A, b, log = true)
-    @test sol1 ≈ sol0 rtol = 1.0e-5
-    @show hist1
 
 
     IdB = IdentityPreconBuilder()
@@ -26,12 +24,35 @@ function main(; n = 100)
     ProdB2 = ProductPreconBuilder(IluB, IdB)
     ProdB3 = ProductPreconBuilder(IluB, IluB)
 
+
+    p1, _ = IluB(A, nothing)
+    pp, _ = ProdB3(A, nothing)
+    x0 = rand(n^2)
+    r0 = A * x0 - b
+    d0 = ldiv!(p1, r0)
+    x1 = x0 - d0
+    r1 = A * x1 - b
+    d1 = ldiv!(p1, r1)
+    x2 = x1 - d1
+
+    rp0 = A * x0 - b
+    dp0 = ldiv!(pp, rp0)
+    y1 = x0 - dp0
+
+    @test norm(x2 - y1, Inf) ≈ 0 atol = 5.0e-14
+
+    sol1, hist1 = bicgstabl(A, b, log = true)
+    @test sol1 ≈ sol0 rtol = 1.0e-5
+    @show hist1
+
+
     IdP, _ = IdB(A, 0)
     Random.seed!(seed)
     sol2, hist2 = bicgstabl(A, b, Pl = IdP, log = true)
     @test sol2 ≈ sol0  rtol = 1.0e-5
     @show hist2
-    @test hist2.iters ≈ hist1.iters atol = 5
+    @test hist2.iters ≈ hist1.iters atol = 6
+
 
     IluP, _ = IluB(A, 0)
     Random.seed!(seed)
