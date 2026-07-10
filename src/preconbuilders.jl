@@ -11,16 +11,6 @@ end
 
 
 """
-    JacobiPreconBuilder()
-
-Return callable object constructing a left Jacobi preconditioner
-to be passed as the `precs` parameter to iterative methods wrapped by LinearSolve.jl.
-"""
-struct JacobiPreconBuilder end
-(::JacobiPreconBuilder)(A::AbstractSparseMatrixCSC, p) = (JacobiPreconditioner(SparseMatrixCSC(size(A)..., getcolptr(A), rowvals(A), nonzeros(A))), LinearAlgebra.I)
-
-
-"""
     ILUZeroPreconBuilder(;blocksize=1)
 
 Return callable object constructing a left zero fill-in ILU preconditioner 
@@ -58,7 +48,7 @@ function pointblock(A0::ExtendableSparseMatrixCSC{Tv, Ti}, blocksize) where {Tv,
     n = A.n
     block = zeros(Tv, blocksize, blocksize)
     nblock = n ÷ blocksize
-    b = SMatrix{blocksize, blocksize}(block)
+    b = SMatrix{blocksize, blocksize, Tv, blocksize^2}(block)
     Tb = typeof(b)
     Ab = ExtendableSparseMatrixCSC{Tb, Ti}(nblock, nblock)
 
@@ -154,10 +144,11 @@ function update!(precon::BlockPreconditioner)
 
     np = length(precon.partitioning)
     precon.facts = Vector{Any}(undef, np)
-    return Threads.@threads for ipart in 1:np
+    Threads.@threads for ipart in 1:np
         AP = precon.A[precon.partitioning[ipart], precon.partitioning[ipart]]
         precon.facts[ipart] = precon.factorizations[ipart](AP)
     end
+    return
 end
 
 
@@ -182,8 +173,8 @@ function LinearAlgebra.ldiv!(u, p::BlockPreconditioner, v)
     partitioning = p.partitioning
     facts = p.facts
     np = length(partitioning)
-    Threads.@threads for ipart in 1:np
-        if allow_views(p.factorizations[ipart])
+    Threads.@threads  for ipart in 1:np
+        if allow_views(p.facts[ipart])
             ldiv!(view(u, partitioning[ipart]), facts[ipart], view(v, partitioning[ipart]))
         else
             uu = u[partitioning[ipart]]
@@ -228,77 +219,79 @@ function (blockprecs::BlockPreconBuilder)(A, p)
     return (bp, LinearAlgebra.I)
 end
 
+
+mutable struct JacobiPreconditioner{Tb, N}
+    invdiag::Vector{Tb}
+end
+
+
 """
-    Allow array for precs => different precoms
+    JacobiPreconditioner(A; blocksize=1)
 """
+function JacobiPreconditioner(A::AbstractSparseMatrixCSC; blocksize = 1)
+    n = size(A, 1)
 
-
-mutable struct _JacobiPreconditioner{Tv}
-    invdiag::Vector{Tv}
-end
-
-function jacobi(A::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti}
-    invdiag = Array{Tv, 1}(undef, A.n)
-    n = A.n
-    @inbounds for i in 1:n
-        invdiag[i] = one(Tv) / A[i, i]
-    end
-    return _JacobiPreconditioner(invdiag)
-end
-
-function jacobi!(p::_JacobiPreconditioner{Tv}, A::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti}
-    n = A.n
-    @inbounds for i in 1:n
-        p.invdiag[i] = one(Tv) / A[i, i]
-    end
-    return p
-end
-
-mutable struct JacobiPreconditioner
-    A::AbstractMatrix
-    factorization::Union{_JacobiPreconditioner, Nothing}
-    function JacobiPreconditioner(A)
-        p = new()
-        p.A = A
-        p.factorization = nothing
-        update!(p)
-        return p
+    if blocksize == 1
+        Tv = eltype(A)
+        invdiag = Array{Tv, 1}(undef, n)
+        @inbounds for i in 1:n
+            invdiag[i] = one(Tv) / A[i, i]
+        end
+        return JacobiPreconditioner{Tv, blocksize}(invdiag)
+    else
+        Tb = SMatrix{blocksize, blocksize, eltype(A), blocksize^2}
+        nblock = n ÷ blocksize
+        invdiag = Array{Tb, 1}(undef, nblock)
+        block = zeros(eltype(A), blocksize, blocksize)
+        for iblock in 1:nblock
+            for i in 1:blocksize
+                for j in 1:blocksize
+                    ii = (iblock - 1) * blocksize + i
+                    jj = (iblock - 1) * blocksize + j
+                    block[i, j] = A[ii, jj]
+                    sblock = SMatrix{blocksize, blocksize}(block)
+                    invdiag[iblock] = inv(sblock)
+                end
+            end
+        end
+        return JacobiPreconditioner{Tb, blocksize}(invdiag)
     end
 end
 
-function LinearAlgebra.ldiv!(u, p::_JacobiPreconditioner, v)
+
+function LinearAlgebra.ldiv!(u::AbstractVector{Tu}, p::JacobiPreconditioner{Tb, N}, v::AbstractVector{Tv}) where {Tu, Tv, Tb, N}
     n = length(p.invdiag)
-    for i in 1:n
-        @inbounds u[i] = p.invdiag[i] * v[i]
+    if N == 1
+        for i in 1:n
+            @inbounds u[i] = p.invdiag[i] * v[i]
+        end
+    else
+        bu = reinterpret(SVector{N, Tu}, u)
+        bv = reinterpret(SVector{N, Tv}, v)
+        for i in 1:n
+            @inbounds bu[i] = p.invdiag[i] * bv[i]
+        end
     end
     return u
 end
 
-LinearAlgebra.ldiv!(p::_JacobiPreconditioner, v) = ldiv!(v, p, v)
+LinearAlgebra.ldiv!(p::JacobiPreconditioner, v) = ldiv!(v, p, v)
+
+allow_views(::JacobiPreconditioner{T, 1}) where {T} = true
+allow_views(::JacobiPreconditioner{T, N}) where {T, N} = true
 
 
 """
-```
-JacobiPreconditioner()
-JacobiPreconditioner(matrix)
-```
+    JacobiPreconBuilder()
 
-Jacobi preconditioner.
+Return callable object constructing a left Jacobi preconditioner
+to be passed as the `precs` parameter to iterative methods wrapped by LinearSolve.jl.
 """
-function JacobiPreconditioner end
-
-function update!(p::JacobiPreconditioner)
-    flush!(p.A)
-    Tv = eltype(p.A)
-    p.factorization = jacobi(SparseMatrixCSC(p.A))
-    return p
+Base.@kwdef struct JacobiPreconBuilder
+    blocksize::Int = 1
 end
+(b::JacobiPreconBuilder)(A::AbstractSparseMatrixCSC, p) = (JacobiPreconditioner(A; blocksize = b.blocksize), LinearAlgebra.I)
 
-LinearAlgebra.ldiv!(u, fact::JacobiPreconditioner, v) = ldiv!(u, fact.factorization, v)
-LinearAlgebra.ldiv!(fact::JacobiPreconditioner, v) = ldiv!(fact.factorization, v)
-
-allow_views(::JacobiPreconditioner) = true
-allow_views(::Type{JacobiPreconditioner}) = true
 
 """
     struct ProductPreconditioner

@@ -83,7 +83,8 @@ allprecs = [
     ExtendableSparse.ILUZeroPreconBuilder(),
     ExtendableSparse.ILUZeroPreconBuilder(; blocksize = 2),
     ExtendableSparse.ILUTPreconBuilder(),
-    #    ExtendableSparse.JacobiPreconBuilder(),
+    ExtendableSparse.JacobiPreconBuilder(),
+    ExtendableSparse.JacobiPreconBuilder(; blocksize = 2),
     SmoothedAggregationPreconBuilder(),
     RugeStubenPreconBuilder(),
 ]
@@ -107,8 +108,10 @@ luprecs = [ExtendableSparse.LinearSolvePreconBuilder(factorization) for  factori
 
 @testset "block preconditioning" begin
     n = 100
+    blocksize = 4
     A = fdrand(n, n)
-    partitioning = A -> [1:2:size(A, 1), 2:2:size(A, 1)]
+    N = n^2
+    partitioning = [i:blocksize:(n^2) for i in 1:blocksize ]
     sol0 = ones(n^2)
     b = A * ones(n^2)
 
