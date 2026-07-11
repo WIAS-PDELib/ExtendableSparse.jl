@@ -41,6 +41,7 @@ export flush!, updateindex!, rawupdateindex!, reset!, nnznew
 export eliminate_dirichlet, eliminate_dirichlet!, mark_dirichlet
 
 
+include("preconditioners.jl")
 include("preconbuilders.jl")
 export LinearSolvePreconBuilder, BlockPreconBuilder, JacobiPreconBuilder
 export ProductPreconBuilder, IdentityPreconBuilder
