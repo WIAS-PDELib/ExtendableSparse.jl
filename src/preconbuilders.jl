@@ -1,6 +1,6 @@
 #
 # This file defines `preconbuilders` which allow to specify `precs` preconditioner constructors
-# for iterativer solvers as they are handeled in LinearSolve.jl.
+# for iterative solvers as they are handled in LinearSolve.jl.
 # See https://docs.sciml.ai/LinearSolve/stable/basics/Preconditioners/#Specifying-Preconditioners
 #
 
