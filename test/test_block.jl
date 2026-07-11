@@ -23,17 +23,17 @@ function main(; n = 100, blocksize = 4)
 
     @test sol ≈ sol0
 
-    sol, hist = cg(A, b, Pl = BlockPreconditioner(A; partitioning, factorization = JacobiPreconditioner), log = true)
+    sol, hist = cg(A, b, Pl = BlockPreconditioner(A; partitioning, factorizations = JacobiPreconditioner), log = true)
     @test sol ≈ sol0
 
-    sol, hist = cg(A, b, Pl = BlockPreconditioner(A; partitioning, factorization = ilu0), log = true)
+    sol, hist = cg(A, b, Pl = BlockPreconditioner(A; partitioning, factorizations = ilu0), log = true)
     @test sol ≈ sol0
 
-    sol, hist = cg(A, b, Pl = BlockPreconditioner(A; partitioning, factorization = sparspaklu), log = true)
+    sol, hist = cg(A, b, Pl = BlockPreconditioner(A; partitioning, factorizations = sparspaklu), log = true)
     @test sol ≈ sol0
 
     partitioning = [i:(i + blocksize - 1) for i in 1:blocksize:N]
-    sol, hist_eq = cg(A, b, Pl = BlockPreconditioner(A; partitioning, factorization = sparspaklu), log = true)
+    sol, hist_eq = cg(A, b, Pl = BlockPreconditioner(A; partitioning, factorizations = sparspaklu), log = true)
     @test sol ≈ sol0
 
     sol, hist_pt = cg(A, b, Pl = JacobiPreconditioner(A; blocksize), log = true)

@@ -1,23 +1,31 @@
+#
+# This file defines a number of preconditioners uses by the preconbuilders.
+#
+
+
 """
     allow_views(::preconditioner)
 
 Factorizations on matrix partitions within a block preconditioner may or may not work with array views.
 E.g. the umfpack factorization cannot work with views, while ILUZeroPreconditioner can.
- Implementing a method for `allow_views` returning `false` resp. `true` allows to dispatch to the proper case.
+Implementing a method for `allow_views` returning `false` resp. `true` allows to dispatch to the proper case.
 """
 allow_views(::Any) = false
+allow_views(::ILUZero.ILU0Precon) = true
 
-mutable struct JacobiPreconditioner{Tb, N}
+#################################################################################
+mutable struct JacobiPreconditioner{Tb, BSize}
     invdiag::Vector{Tb}
 end
 
-
 """
     JacobiPreconditioner(A; blocksize=1)
+
+Create a Jacobi preconditioner. If `blocksize>1` it is a point block preconditioner with blocks of
+type of `StaticArrays.SMatrix`
 """
 function JacobiPreconditioner(A::AbstractSparseMatrixCSC; blocksize = 1)
     n = size(A, 1)
-
     if blocksize == 1
         Tv = eltype(A)
         invdiag = Array{Tv, 1}(undef, n)
@@ -36,8 +44,7 @@ function JacobiPreconditioner(A::AbstractSparseMatrixCSC; blocksize = 1)
                     ii = (iblock - 1) * blocksize + i
                     jj = (iblock - 1) * blocksize + j
                     block[i, j] = A[ii, jj]
-                    sblock = SMatrix{blocksize, blocksize}(block)
-                    invdiag[iblock] = inv(sblock)
+                    invdiag[iblock] = inv(SMatrix{blocksize, blocksize}(block))
                 end
             end
         end
@@ -45,16 +52,15 @@ function JacobiPreconditioner(A::AbstractSparseMatrixCSC; blocksize = 1)
     end
 end
 
-
-function LinearAlgebra.ldiv!(u::AbstractVector{Tu}, p::JacobiPreconditioner{Tb, N}, v::AbstractVector{Tv}) where {Tu, Tv, Tb, N}
+function LinearAlgebra.ldiv!(u::AbstractVector{Tu}, p::JacobiPreconditioner{Tb, BSize}, v::AbstractVector{Tv}) where {Tu, Tv, Tb, BSize}
     n = length(p.invdiag)
-    if N == 1
+    if BSize == 1
         for i in 1:n
             @inbounds u[i] = p.invdiag[i] * v[i]
         end
     else
-        bu = reinterpret(SVector{N, Tu}, u)
-        bv = reinterpret(SVector{N, Tv}, v)
+        bu = reinterpret(SVector{BSize, Tu}, u)
+        bv = reinterpret(SVector{BSize, Tv}, v)
         for i in 1:n
             @inbounds bu[i] = p.invdiag[i] * bv[i]
         end
@@ -65,13 +71,13 @@ end
 LinearAlgebra.ldiv!(p::JacobiPreconditioner, v) = ldiv!(v, p, v)
 
 allow_views(::JacobiPreconditioner{T, 1}) where {T} = true
-allow_views(::JacobiPreconditioner{T, N}) where {T, N} = true
+allow_views(::JacobiPreconditioner{T, BSize}) where {T, BSize} = false
 
-
+############################################################################
 """
-    pointblock(matrix,blocksize)
+        pointblock(A,blocksize)
 
-Create a pointblock matrix.
+Create a pointblock matrix with entries of type `StaticArrays.SMatrix` of size `blocksize x blocksize` from A.
 """
 function pointblock(A0::ExtendableSparseMatrixCSC{Tv, Ti}, blocksize) where {Tv, Ti}
     A = SparseMatrixCSC(A0)
@@ -84,8 +90,6 @@ function pointblock(A0::ExtendableSparseMatrixCSC{Tv, Ti}, blocksize) where {Tv,
     b = SMatrix{blocksize, blocksize, Tv, blocksize^2}(block)
     Tb = typeof(b)
     Ab = ExtendableSparseMatrixCSC{Tb, Ti}(nblock, nblock)
-
-
     for i in 1:n
         for k in colptr[i]:(colptr[i + 1] - 1)
             j = rowval[k]
@@ -101,86 +105,77 @@ function pointblock(A0::ExtendableSparseMatrixCSC{Tv, Ti}, blocksize) where {Tv,
     return flush!(Ab)
 end
 
-struct ILU0BlockPrecon{N, NN, Tv, Ti}
-    ilu0::ILUZero.ILU0Precon{SMatrix{N, N, Tv, NN}, Ti, SVector{N, Tv}}
+"""
+    ILU0BlockPrecon
+
+Point-block preconditioner based on ILUZero.ilu0
+"""
+struct ILU0BlockPrecon{BSize, BSquare, Tv, Ti}
+    ilu0::ILUZero.ILU0Precon{SMatrix{BSize, BSize, Tv, BSquare}, Ti, SVector{BSize, Tv}}
 end
 
 function LinearAlgebra.ldiv!(
         Y::Vector{Tv},
-        A::ILU0BlockPrecon{N, NN, Tv, Ti},
+        A::ILU0BlockPrecon{BSize, BSquare, Tv, Ti},
         B::Vector{Tv}
-    ) where {N, NN, Tv, Ti}
-    BY = reinterpret(SVector{N, Tv}, Y)
-    BB = reinterpret(SVector{N, Tv}, B)
+    ) where {BSize, BSquare, Tv, Ti}
+    BY = reinterpret(SVector{BSize, Tv}, Y)
+    BB = reinterpret(SVector{BSize, Tv}, B)
     ldiv!(BY, A.ilu0, BB)
     return Y
 end
 
-######
-mutable struct BlockPreconditioner
-    A::AbstractMatrix
-    factorizations
-    partitioning::Union{Nothing, Vector{AbstractVector}}
-    facts::Vector
-    function BlockPreconditioner(A; partitioning = nothing, factorization = nothing, factorizations = nothing)
-        p = new()
-        p.A = A
-        p.partitioning = partitioning
-        if !isnothing(factorization)
-            p.factorizations = [factorization for i in 1:length(partitioning)]
-        else
-            p.factorizations = factorizations
-        end
-        update!(p)
-        return p
-    end
+#######################################################################################
+struct BlockPreconditioner
+    partitioning::Vector{AbstractVector}
+    factorizations::Vector{Any}
 end
 
-
 """
-     BlockPreconditioner(;partitioning, factorization)
+     BlockPreconditioner(A;partitioning, factorizations)
     
 Create a block preconditioner from partition of unknowns given by `partitioning`, a vector of AbstractVectors describing the
 indices of the partitions of the matrix. For a matrix of size `n x n`, e.g. partitioning could be `[ 1:n÷2, (n÷2+1):n]`
 or [ 1:2:n, 2:2:n].
-Factorization is a callable (Function or struct) which allows to create a factorization (with `ldiv!` methods) from a submatrix of A.
+
+`factorizations` is a thread safe callable `factorizations(A)` (Function or struct) which allows to create a factorization (with `ldiv!` methods)
+from a submatrix of A, or a vector thereof.
 """
-function BlockPreconditioner end
-
-
-function update!(precon::BlockPreconditioner)
-    flush!(precon.A)
-    nall = sum(length, precon.partitioning)
-    n = size(precon.A, 1)
+function BlockPreconditioner(
+        A::AbstractSparseMatrixCSC;
+        partitioning = [1:size(A, 1)],
+        factorizations = (A) -> nothing
+    )
+    nall = sum(length, partitioning)
+    n = size(A, 1)
     if nall != n
-        @warn "sum(length,partitioning)=$(nall) but n=$(n)"
+        @error "BlockPreconditioner: sum(length,partitioning)=$(nall) but n=$(n)"
+    end
+    np = length(partitioning)
+
+    if !isa(factorizations, Vector)
+        factorizations = fill(factorizations, np)
     end
 
-    if isnothing(precon.partitioning)
-        partitioning = [1:n]
-    end
-
-    np = length(precon.partitioning)
-    precon.facts = Vector{Any}(undef, np)
+    facts = Vector{Any}(undef, np)
     Threads.@threads for ipart in 1:np
-        AP = precon.A[precon.partitioning[ipart], precon.partitioning[ipart]]
-        precon.facts[ipart] = precon.factorizations[ipart](AP)
+        AP = A[partitioning[ipart], partitioning[ipart]]
+        facts[ipart] = factorizations[ipart](AP)
     end
-    return
+
+    return BlockPreconditioner(partitioning, facts)
 end
 
-
 function LinearAlgebra.ldiv!(p::BlockPreconditioner, v)
-    partitioning = p.partitioning
-    facts = p.facts
+    (; factorizations, partitioning) = p
     np = length(partitioning)
 
     Threads.@threads for ipart in 1:np
-        if allow_views(p.factorizations[ipart])
-            ldiv!(facts[ipart], view(v, partitioning[ipart]))
+        if allow_views(factorizations[ipart])
+            ldiv!(factorizations[ipart], view(v, partitioning[ipart]))
         else
             vv = v[partitioning[ipart]]
-            ldiv!(facts[ipart], vv)
+            ldiv!(factorizations[ipart], vv)
             view(v, partitioning[ipart]) .= vv
         end
     end
@@ -188,30 +183,33 @@ function LinearAlgebra.ldiv!(p::BlockPreconditioner, v)
 end
 
 function LinearAlgebra.ldiv!(u, p::BlockPreconditioner, v)
-    partitioning = p.partitioning
-    facts = p.facts
+    (; factorizations, partitioning) = p
     np = length(partitioning)
     Threads.@threads  for ipart in 1:np
-        if allow_views(p.facts[ipart])
-            ldiv!(view(u, partitioning[ipart]), facts[ipart], view(v, partitioning[ipart]))
+        if allow_views(factorizations[ipart])
+            ldiv!(view(u, partitioning[ipart]), factorizations[ipart], view(v, partitioning[ipart]))
         else
             uu = u[partitioning[ipart]]
-            ldiv!(uu, facts[ipart], v[partitioning[ipart]])
+            ldiv!(uu, factorizations[ipart], v[partitioning[ipart]])
             view(u, partitioning[ipart]) .= uu
         end
     end
     return u
 end
 
-Base.eltype(p::BlockPreconditioner) = eltype(p.facts[1])
+Base.eltype(p::BlockPreconditioner) = eltype(p.factorizations[1])
 
+
+#######################################################################################
 
 """
-    struct ProductPreconditioner
+    ProductPreconditioner(A,M1,M2)
 
-Product of two left preconditioning steps.
+Product M of two left preconditioning steps using `M1` and `M2`, respectively.
+
 The operation ``u=M^{-1}v`` is defined by two simple iteration steps
 with two different preconditioners ``M_1`` and ``M_2``:
+
 Let ``u_0=0``. Then calculate
 ```math    
  \\begin{align*}
