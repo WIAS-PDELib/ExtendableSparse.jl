@@ -34,19 +34,18 @@ function JacobiPreconditioner(A::AbstractSparseMatrixCSC; blocksize = 1)
         end
         return JacobiPreconditioner{Tv, blocksize}(invdiag)
     else
+        n % blocksize == 0 || throw(ArgumentError("JacobiPreconditioner: size(A, 1)=$(n) must be divisible by blocksize=$(blocksize)"))
         Tb = SMatrix{blocksize, blocksize, eltype(A), blocksize^2}
         nblock = n ÷ blocksize
-        invdiag = Array{Tb, 1}(undef, nblock)
+        invdiag = Vector{Tb}(undef, nblock)
         block = zeros(eltype(A), blocksize, blocksize)
         for iblock in 1:nblock
-            for i in 1:blocksize
-                for j in 1:blocksize
-                    ii = (iblock - 1) * blocksize + i
-                    jj = (iblock - 1) * blocksize + j
-                    block[i, j] = A[ii, jj]
-                    invdiag[iblock] = inv(SMatrix{blocksize, blocksize}(block))
-                end
+            @inbounds for i in 1:blocksize, j in 1:blocksize
+                ii = (iblock - 1) * blocksize + i
+                jj = (iblock - 1) * blocksize + j
+                block[i, j] = A[ii, jj]
             end
+            invdiag[iblock] = inv(SMatrix{blocksize, blocksize}(block))
         end
         return JacobiPreconditioner{Tb, blocksize}(invdiag)
     end
