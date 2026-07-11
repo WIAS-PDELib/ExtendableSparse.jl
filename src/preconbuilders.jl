@@ -1,3 +1,9 @@
+#
+# This file defines `preconbuilders` which allow to specify `precs` preconditioner constructors
+# for iterativer solvers as they are handeled in LinearSolve.jl.
+# See https://docs.sciml.ai/LinearSolve/stable/basics/Preconditioners/#Specifying-Preconditioners
+#
+
 """
         LinearSolvePreconBuilder(; method=UMFPACKFactorization())
 
@@ -11,7 +17,7 @@ end
 
 
 """
-    ILUZeroPreconBuilder(;blocksize=1)
+    ILUZeroPreconBuilder(; blocksize = 1)
 
 Return callable object constructing a left zero fill-in ILU preconditioner 
 using [ILUZero.jl](https://github.com/mcovalt/ILUZero.jl)
@@ -30,7 +36,7 @@ function (b::ILUZeroPreconBuilder)(A0, p)
 end
 
 """
-    ILUTPreconBuilder(; droptol=0.1)
+    ILUTPreconBuilder(; droptol = 0.1)
 
 Return callable object constructing a left ILUT preconditioner 
 using [IncompleteLU.jl](https://github.com/haampie/IncompleteLU.jl)
@@ -74,7 +80,7 @@ end
 
 
 """
-    JacobiPreconBuilder()
+    JacobiPreconBuilder(; blocksize = 1)
 
 Return callable object constructing a left Jacobi preconditioner
 to be passed as the `precs` parameter to iterative methods wrapped by LinearSolve.jl.
@@ -87,9 +93,10 @@ end
 
 
 """
-    struct ProductPreconBuilder
+    ProductPreconBuilder(precs1, precs2)
 
-LinearSolve `precs` compatible preonditioner constructor for [`ProductPreconditioner`](@ref)
+Return LinearSolve `precs` compatible callable object which constructs
+a  [`ProductPreconditioner`](@ref) from the  `precs1` and `precs2` preconbuilders.
 """
 Base.@kwdef mutable struct ProductPreconBuilder
     precs1 = JacobiPreconBuilder()
