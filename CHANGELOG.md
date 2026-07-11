@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.4.0] - 2026-07-12
+- JacobiPreconBuilder now allows for blocksize
+- More tests
+- Internal reorganization (simplified BlockPreconditioner etc.)
+
 ## [2.3.0] - 2026-06-16
 - Product and Identity preconditioners and PreconBuilders
 - Block preconditioner and PreconBuilder now allow for vector 
@@ -13,7 +18,6 @@
 - fix allocations in lnk+csc matrix addition
 
 ## [2.0.0] - 2026-01-06
-
 - Remove solver + precon API which is not based on precs or directly overloading `\`.
   Fully rely on LinearSolve (besides `\`)
 - Move AMGBuilder etc to corresponding packages (depending on the PRs)
