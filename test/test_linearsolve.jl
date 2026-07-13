@@ -28,9 +28,8 @@ function test_ls2(T, k, l, m; linsolver = SparspakFactorization())
     A = fdrand(T, k, l, m; rand = () -> 1, matrixtype = ExtendableSparseMatrix)
     b = T.(rand(k * l * m))
     p = LinearProblem(A, b)
-    x0 = solve(p, linsolver)
-    cache = x0.cache
-    x0 = copy(x0)
+    cache = init(p, linsolver)
+    x0 = copy(solve!(cache))
     nonzeros(A) .-= 1.0e-4
     for i in 1:(k * l * m)
         A[i, i] += 1.0e-4
