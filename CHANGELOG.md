@@ -1,4 +1,6 @@
 # Changelog
+## [2.5.0] - 2026-07-14
+- Add constructor for GenericExtendablSparseMatrixCSC from SparseMatrixCSC data
 
 ## [2.4.0] - 2026-07-12
 - JacobiPreconBuilder now allows for blocksize
