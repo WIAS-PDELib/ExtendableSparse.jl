@@ -26,6 +26,13 @@ function GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}(m::Integer, n::Integer) wh
     )
 end
 
+function GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}(m::Integer, n::Integer, colptr::Vector{Ti}, rowvals::Vector{Ti}, nzval::Vector{Tv}) where {Tm <: AbstractSparseMatrixExtension, Tv, Ti <: Integer}
+    return GenericExtendableSparseMatrixCSC(
+        SparseMatrixCSC(m, n, colptr, rowvals, nzval),
+        Tm(m, n)
+    )
+end
+
 function GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}(A::SparseMatrixCSC{Tv, Ti}) where {Tm <: AbstractSparseMatrixExtension, Tv, Ti <: Integer}
     return GenericExtendableSparseMatrixCSC{Tm, Tv, Ti}(
         SparseMatrixCSC(A),
