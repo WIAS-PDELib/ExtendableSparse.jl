@@ -15,7 +15,7 @@ It is assumed that the set of unknowns is partitioned, and the partitioning is c
 several partitions of the same color can be handled by different threads, both during matrix assembly (which
 in general would use a partition of e.g. finite elements compatible to the partitioning of the nodes) and during
 matrix-vector multiplication. This approach is compatible with the current choice of the standard Julia
-sparse  ecosystem which prefers compressed colume storage (CSC) over compressed row storage (CSR).
+sparse  ecosystem which prefers compressed column storage (CSC) over compressed row storage (CSR).
 
 """
 mutable struct GenericMTExtendableSparseMatrixCSC{Tm <: AbstractSparseMatrixExtension, Tv, Ti <: Integer} <: AbstractExtendableSparseMatrixCSC{Tv, Ti}
